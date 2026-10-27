@@ -74,6 +74,20 @@ export default function Auth() {
     { label: "One uppercase letter", valid: /[A-Z]/.test(password) },
     { label: "One lowercase letter", valid: /[a-z]/.test(password) },
     { label: "One number", valid: /[0-9]/.test(password) },
+    {
+      label: "One special character",
+      valid: /[^A-Za-z0-9\s]/.test(password),
+    },
+  ];
+  const passwordStrength = passwordRules.filter((rule) => rule.valid).length;
+  const passwordIsValid = passwordRules.every((rule) => rule.valid);
+  const strengthLabels = [
+    "Too weak",
+    "Weak",
+    "Fair",
+    "Good",
+    "Strong",
+    "Excellent",
   ];
 
   useEffect(() => {
@@ -159,6 +173,11 @@ export default function Auth() {
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    if (isSignUp && !passwordIsValid) {
+      toast.error("Please meet all password requirements");
+      return;
+    }
 
     if (isSignUp && !passwordsMatch) {
       toast.error("Passwords do not match");
@@ -283,6 +302,8 @@ export default function Auth() {
                     type="text"
                     autoComplete="name"
                     required
+                    minLength={2}
+                    maxLength={80}
                     placeholder="Your full name"
                     className={inputClasses}
                   />
@@ -381,8 +402,16 @@ export default function Auth() {
                     }
                     required
                     minLength={8}
-                    pattern={isSignUp ? "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9]).{8,}" : undefined}
-                    title={isSignUp ? "Use at least 8 characters with uppercase, lowercase and a number." : undefined}
+                    pattern={
+                      isSignUp
+                        ? "(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9\\s]).{8,}"
+                        : undefined
+                    }
+                    title={
+                      isSignUp
+                        ? "Use at least 8 characters with uppercase, lowercase, a number, and a special character."
+                        : undefined
+                    }
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                     placeholder="At least 8 characters"
@@ -403,19 +432,57 @@ export default function Auth() {
                     )}
                   </button>
                 </div>
-                {isSignUp && password.length > 0 && (
-                  <ul className="mt-2 grid gap-1 text-xs sm:grid-cols-2" aria-label="Password requirements">
-                    {passwordRules.map(({ label, valid }) => (
-                      <li
-                        key={label}
-                        className={`flex items-center gap-1.5 font-semibold ${
-                          valid ? "text-emerald-700" : "text-(--color-muted)"
-                        }`}
+                {isSignUp && (
+                  <div className="mt-3" id="password-requirements">
+                    <div className="flex items-center justify-between text-xs font-bold">
+                      <span className="text-(--color-muted)">Password strength</span>
+                      <span
+                        className={
+                          passwordStrength >= 4
+                            ? "text-emerald-700"
+                            : passwordStrength >= 3
+                              ? "text-amber-600"
+                              : "text-red-600"
+                        }
                       >
-                        <CheckCircle2 className="h-3.5 w-3.5" /> {label}
-                      </li>
-                    ))}
-                  </ul>
+                        {password ? strengthLabels[passwordStrength] : "Not entered"}
+                      </span>
+                    </div>
+                    <div
+                      className="mt-2 grid grid-cols-5 gap-1"
+                      aria-label={`${passwordStrength} of 5 password requirements met`}
+                    >
+                      {passwordRules.map(({ label }, index) => (
+                        <span
+                          key={label}
+                          className={`h-1.5 rounded-full transition-colors ${
+                            index >= passwordStrength
+                              ? "bg-(--color-border)"
+                              : passwordStrength >= 4
+                                ? "bg-emerald-600"
+                                : passwordStrength >= 3
+                                  ? "bg-amber-500"
+                                  : "bg-red-500"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <ul
+                      className="mt-3 grid gap-1.5 text-xs sm:grid-cols-2"
+                      aria-label="Password requirements"
+                    >
+                      {passwordRules.map(({ label, valid }) => (
+                        <li
+                          key={label}
+                          className={`flex items-center gap-1.5 font-semibold ${
+                            valid ? "text-emerald-700" : "text-(--color-muted)"
+                          }`}
+                        >
+                          <CheckCircle2 className="h-3.5 w-3.5" /> {label}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
 
@@ -432,6 +499,7 @@ export default function Auth() {
                       type={showPassword ? "text" : "password"}
                       autoComplete="new-password"
                       required
+                      minLength={8}
                       value={confirmPassword}
                       onChange={(event) => setConfirmPassword(event.target.value)}
                       placeholder="Enter your password again"
@@ -492,7 +560,11 @@ export default function Auth() {
 
               <button
                 type="submit"
-                disabled={isSubmitting}
+                disabled={
+                  isSubmitting ||
+                  (isSignUp &&
+                    (!phoneIsValid || !passwordIsValid || !passwordsMatch))
+                }
                 className="flex w-full items-center justify-center gap-2 rounded-(--radius-small) bg-(--color-primary) px-5 py-3.5 font-extrabold text-white transition hover:bg-(--color-primary-dark) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {isSubmitting
