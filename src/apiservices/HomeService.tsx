@@ -15,9 +15,10 @@ export type HomeSubCategory = {
 export type HomeCategory = {
   id: number;
   name: string;
-  description: string | null;
+  description?: string | null;
   image: string | null;
-  sub_categories: HomeSubCategory[];
+  services?: string[] | null;
+  sub_categories?: HomeSubCategory[];
 };
 
 export type FetchCategoriesResponse = {
@@ -30,6 +31,7 @@ export const fetchCategories = async (): Promise<FetchCategoriesResponse> => {
   const response = await apiClient.get<FetchCategoriesResponse>(
     "/fetch-categories",
   );
+  console.log("Fetched categories:", response.data);
   return response.data;
 };
 

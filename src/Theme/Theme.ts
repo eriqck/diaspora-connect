@@ -1,20 +1,23 @@
 /**
  * Shared visual tokens for Diaspora Connect.
  *
+ * Palette is based on the Kenyan flag: black, red, and green, with white
+ * (the flag's fringes) used for surfaces.
+ *
  * Components can use the exported values directly or reference the CSS custom
  * properties installed by `applyTheme` (for example: var(--color-primary)).
  */
 export const theme = {
   colors: {
-    primary: '#2563EB',
-    primaryDark: '#1E3A8A',
-    secondary: '#F2B84B',
-    accent: '#C83E4D',
-    ink: '#162A26',
-    muted: '#62706C',
-    surface: '#FFFFFF',
-    background: '#F7F5EF',
-    border: '#DDE4E0',
+    primary: '#006600',     // flag green
+    primaryDark: '#004A00', // deep green for hover/pressed states
+    secondary: '#BB0000',   // flag red
+    accent: '#000000',      // flag black
+    ink: '#111111',         // near-black body text
+    muted: '#5F6B63',
+    surface: '#FFFFFF',     // flag white
+    background: '#F6F6F2',
+    border: '#DCE3DD',
   },
   radius: {
     small: '0.5rem',
@@ -22,7 +25,7 @@ export const theme = {
     pill: '9999px',
   },
   shadow: {
-    soft: '0 10px 30px rgba(30, 58, 138, 0.10)',
+    soft: '0 10px 30px rgba(0, 74, 0, 0.10)',
   },
 } as const
 

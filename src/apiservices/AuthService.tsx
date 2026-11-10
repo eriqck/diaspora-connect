@@ -12,11 +12,13 @@ export const registerUser = async (formData: RegisterFormData) => {
 
 export const loginUser = async (formData: LoginFormData) => {
   const response = await apiClient.post<AuthResponse>("/sign-in", formData);
+  console.log(response.data)
   return response.data;
 };
 
 export const loginAdmin = async (formData: LoginFormData) => {
   const response = await apiClient.post<AuthResponse>("/admin-sign-in", formData);
+  console.log(response.data)
   return response.data;
 };
 

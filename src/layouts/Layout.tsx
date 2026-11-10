@@ -47,7 +47,7 @@ function Layout() {
           >
             <div className="mb-3 flex items-center gap-3 px-2 py-1">
               <img
-                src="/diaspora/images/alf.jpeg"
+                src="/images/alf.jpeg"
                 alt="Alfred"
                 className="h-16 w-16 shrink-0 rounded-full border-2 border-(--color-primary)/15 object-cover object-top"
               />
@@ -98,7 +98,7 @@ function Layout() {
             </span>
           ) : (
             <img
-              src="/diaspora/images/alf.jpeg"
+              src="/images/alf.jpeg"
               alt=""
               className="h-10 w-10 rounded-full border-2 border-white/30 object-cover object-top"
             />

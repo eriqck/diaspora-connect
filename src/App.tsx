@@ -25,7 +25,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="services" element={<AllSelectedServices />} />
           <Route
-            path="services/:categoryId/:serviceId"
+            path="services/:categoryId"
             element={<SelectedService />}
           />
           <Route path="login" element={<Auth />} />

@@ -52,7 +52,19 @@ const toCategoryFormData = (
   }
 
   formData.append("name", values.name.trim());
-  formData.append("description", values.description.trim());
+
+  const services = values.services
+    .split(/\r?\n/)
+    .map((service) => service.trim())
+    .filter(Boolean);
+
+  if (services.length > 0) {
+    // Sent as services[0], services[1]... so Laravel reads it as a real array
+    services.forEach((service) => formData.append("services[]", service));
+  } else {
+    // Empty string becomes null in Laravel, which clears the list
+    formData.append("services", "");
+  }
 
   if (values.image) {
     formData.append("image", values.image);
@@ -73,6 +85,7 @@ export const viewCategories = async () => {
   const response = await apiClient.get<ViewCategoriesResponse>(
     "/view-categories",
   );
+  console.log("View categories response:", response.data);
   return response.data;
 };
 

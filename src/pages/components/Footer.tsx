@@ -32,17 +32,40 @@ const socialLinks = [
 
 const currentYear = new Date().getFullYear();
 
+const contactRowClass =
+  "group flex items-center gap-3 text-white/85 transition-colors hover:text-white focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+
+const contactChipClass =
+  "grid h-8 w-8 shrink-0 place-items-center rounded-full bg-(--color-primary) text-white transition-colors group-hover:bg-(--color-secondary) group-focus-visible:bg-(--color-secondary)";
+
+const socialLinkClass =
+  "grid h-10 w-10 place-items-center rounded-full border border-white/25 text-white/85 transition-colors hover:border-(--color-secondary) hover:bg-(--color-secondary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
 function Footer() {
   return (
-    <footer className="bg-(--color-primary-dark) text-white">
+    <footer className="bg-(--color-accent) text-white">
+      {/* Flag stripes: red, white, green, sitting on the black footer */}
+      <div aria-hidden="true" className="flex flex-col">
+        <div className="h-1 bg-(--color-secondary)" />
+        <div className="h-px bg-white" />
+        <div className="h-1 bg-(--color-primary)" />
+      </div>
+
       <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-2 lg:px-8">
         <div className="max-w-md">
           <a
             href="/"
-            className="inline-block rounded-lg text-2xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-secondary)"
+            className="inline-block rounded-lg text-2xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
             aria-label="Diaspora Help home"
           >
-            Diaspora <span className="text-(--color-secondary)">Help</span>
+            Diaspora Help
+            <span
+              aria-hidden="true"
+              className="mt-2 flex h-1 w-16 overflow-hidden rounded-full"
+            >
+              <span className="w-1/2 bg-(--color-secondary)" />
+              <span className="w-1/2 bg-(--color-primary)" />
+            </span>
           </a>
           <p className="mt-4 text-sm leading-6 text-white/75">
             Trusted, practical support for the diaspora handling important matters across Kenya.
@@ -50,20 +73,31 @@ function Footer() {
         </div>
 
         <div className="md:justify-self-end">
-          <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-(--color-secondary)">
+          <h2 className="text-sm font-extrabold uppercase tracking-[0.18em] text-white">
             Contact us
+            <span
+              aria-hidden="true"
+              className="mt-2 block h-0.5 w-10 rounded-full bg-(--color-secondary)"
+            />
           </h2>
-          <address className="mt-4 space-y-3 text-sm not-italic text-white/80">
-            <a className="flex items-center gap-3 transition hover:text-white" href="tel:+254720554657">
-              <Phone className="h-4 w-4 shrink-0 text-(--color-secondary)" />
+
+          <address className="mt-5 space-y-3 text-sm not-italic">
+            <a className={contactRowClass} href="tel:+254720554657">
+              <span className={contactChipClass}>
+                <Phone className="h-4 w-4" aria-hidden="true" />
+              </span>
               +254 720 554 657
             </a>
-            <a className="flex items-center gap-3 transition hover:text-white" href="mailto:support@diasporahelp.co.ke">
-              <Mail className="h-4 w-4 shrink-0 text-(--color-secondary)" />
+            <a className={contactRowClass} href="mailto:support@diasporahelp.co.ke">
+              <span className={contactChipClass}>
+                <Mail className="h-4 w-4" aria-hidden="true" />
+              </span>
               support@diasporahelp.co.ke
             </a>
-            <p className="flex items-center gap-3">
-              <MapPin className="h-4 w-4 shrink-0 text-(--color-secondary)" />
+            <p className="flex items-center gap-3 text-white/85">
+              <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-(--color-primary) text-white">
+                <MapPin className="h-4 w-4" aria-hidden="true" />
+              </span>
               Nairobi, Kenya
             </p>
           </address>
@@ -76,7 +110,7 @@ function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={label}
-                className="grid h-10 w-10 place-items-center rounded-full border border-white/20 text-white/80 transition hover:border-(--color-secondary) hover:bg-(--color-secondary) hover:text-(--color-primary-dark) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-secondary)"
+                className={socialLinkClass}
               >
                 <Icon className="h-5 w-5" />
               </a>
@@ -85,11 +119,14 @@ function Footer() {
         </div>
       </div>
 
-      <div className="border-t border-white/10">
-        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
+      <div className="border-t border-white/15">
+        <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
           <p>&copy; {currentYear} Diaspora Help. All rights reserved.</p>
           <p>
-            Developed by <span className="font-bold text-(--color-secondary)">Munax Digital Solutions</span>
+            Developed by{" "}
+            <span className="font-bold text-white underline decoration-(--color-secondary) decoration-2 underline-offset-4">
+              Munax Digital Solutions
+            </span>
           </p>
         </div>
       </div>

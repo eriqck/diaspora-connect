@@ -12,7 +12,6 @@ import {
   X,
 } from "lucide-react";
 import { type FormEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { getAccount, updateAccount } from "../apiservices/AccountService";
 import type {
@@ -200,12 +199,7 @@ export default function Account() {
               View your details and follow every service request in one place.
             </p>
           </div>
-          <Link
-            to="/services"
-            className="inline-flex w-fit items-center justify-center rounded-(--radius-small) bg-(--color-primary) px-5 py-3 text-sm font-extrabold text-white transition hover:-translate-y-0.5 hover:bg-(--color-primary-dark)"
-          >
-            Make a new request
-          </Link>
+          
         </div>
 
         <div className="mt-8 grid items-start gap-6 lg:grid-cols-[20rem_minmax(0,1fr)]">
@@ -280,12 +274,7 @@ export default function Account() {
                 <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-(--color-muted)">
                   When you request a service, its progress and updates will appear here.
                 </p>
-                <Link
-                  to="/services"
-                  className="mt-6 inline-flex rounded-(--radius-small) bg-(--color-primary) px-5 py-3 text-sm font-extrabold text-white hover:bg-(--color-primary-dark)"
-                >
-                  Explore services
-                </Link>
+                
               </div>
             ) : (
               <div className="mt-5 space-y-4">

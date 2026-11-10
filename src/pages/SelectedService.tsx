@@ -12,23 +12,17 @@ import {
   Phone,
   Send,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useSearchParams } from "react-router-dom";
 import {
   fetchCategories,
   submitRequest,
   type HomeCategory,
-  type HomeSubCategory,
 } from "../apiservices/HomeService";
 import type { AuthUser } from "../formtypes/AuthTypes";
 import type {
   SubmitRequestData,
   SubmitRequestResponse,
 } from "../formtypes/HomeTypes";
-
-type SelectedServiceData = {
-  category: HomeCategory;
-  service: HomeSubCategory;
-};
 
 const getStoredUser = (): AuthUser | null => {
   const token = localStorage.getItem("authToken");
@@ -44,9 +38,10 @@ const getStoredUser = (): AuthUser | null => {
 };
 
 function SelectedService() {
-  const { categoryId, serviceId } = useParams();
-  const [selectedService, setSelectedService] =
-    useState<SelectedServiceData | null>(null);
+  const { categoryId } = useParams();
+  const [searchParams] = useSearchParams();
+  const requestedService = searchParams.get("service");
+  const [category, setCategory] = useState<HomeCategory | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
@@ -72,7 +67,7 @@ function SelectedService() {
   useEffect(() => {
     let isCurrent = true;
 
-    const loadSelectedService = async () => {
+    const loadCategory = async () => {
       setLoading(true);
       setError(null);
       setImageFailed(false);
@@ -83,27 +78,24 @@ function SelectedService() {
         const result = await fetchCategories();
 
         if (!result.success) {
-          throw new Error(result.message || "Unable to load this service.");
+          throw new Error(result.message || "Unable to load this category.");
         }
 
-        const category = result.categories.find(
+        const selectedCategory = result.categories.find(
           ({ id }) => String(id) === categoryId,
         );
-        const service = category?.sub_categories.find(
-          ({ id }) => String(id) === serviceId,
-        );
 
-        if (!category || !service) {
-          throw new Error("The selected service could not be found.");
+        if (!selectedCategory) {
+          throw new Error("The selected category could not be found.");
         }
 
-        if (isCurrent) setSelectedService({ category, service });
+        if (isCurrent) setCategory(selectedCategory);
       } catch (loadError) {
         if (isCurrent) {
           setError(
             loadError instanceof Error
               ? loadError.message
-              : "Unable to load this service.",
+              : "Unable to load this category.",
           );
         }
       } finally {
@@ -111,12 +103,12 @@ function SelectedService() {
       }
     };
 
-    void loadSelectedService();
+    void loadCategory();
 
     return () => {
       isCurrent = false;
     };
-  }, [categoryId, serviceId]);
+  }, [categoryId]);
 
   if (loading) {
     return (
@@ -124,21 +116,21 @@ function SelectedService() {
         <div className="text-center" role="status">
           <LoaderCircle className="mx-auto h-9 w-9 animate-spin text-(--color-primary)" />
           <p className="mt-4 font-bold text-(--color-muted)">
-            Loading service...
+            Loading category...
           </p>
         </div>
       </main>
     );
   }
 
-  if (error || !selectedService) {
+  if (error || !category) {
     return (
       <main className="min-h-[60vh] bg-(--color-background) px-4 py-16 text-(--color-ink) sm:px-6 lg:px-8">
         <div className="mx-auto max-w-2xl rounded-(--radius-medium) border border-(--color-border) bg-(--color-surface) p-8 text-center shadow-sm">
           <Layers3 className="mx-auto h-12 w-12 text-(--color-primary)" />
-          <h1 className="mt-5 text-3xl font-black">Service not found</h1>
+          <h1 className="mt-5 text-3xl font-black">Category not found</h1>
           <p className="mt-3 text-(--color-muted)">
-            {error || "The selected service could not be found."}
+            {error || "The selected category could not be found."}
           </p>
           <Link
             to="/services"
@@ -151,8 +143,13 @@ function SelectedService() {
     );
   }
 
-  const { category, service } = selectedService;
-  const requestMessage = `Hello Alfred, I would like help with ${service.name} under ${category.name}.`;
+  const selectedService = category.services?.find(
+    (service) => service.toLowerCase() === requestedService?.toLowerCase(),
+  );
+  const serviceTitle = selectedService ?? category.name;
+  const requestMessage = selectedService
+    ? `Hello Alfred, I would like help with ${selectedService} under ${category.name}.`
+    : `Hello Alfred, I would like help with services in the ${category.name} category.`;
 
   const handleSubmitRequest = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -205,10 +202,10 @@ function SelectedService() {
     <main className="min-h-screen bg-(--color-background) px-4 py-8 text-(--color-ink) sm:px-6 lg:px-8 lg:py-10">
       <div className="mx-auto grid max-w-6xl items-start gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(340px,0.85fr)]">
         <article className="overflow-hidden rounded-(--radius-medium) border border-(--color-border) bg-(--color-surface) shadow-(--shadow-soft)">
-          {service.image && !imageFailed ? (
+          {category.image && !imageFailed ? (
             <img
-              src={service.image}
-              alt={service.name}
+              src={category.image}
+              alt={category.name}
               onError={() => setImageFailed(true)}
               className="h-64 w-full object-cover sm:h-72 lg:h-80"
             />
@@ -220,22 +217,44 @@ function SelectedService() {
 
           <div className="p-6 sm:p-8">
             <Link
-              to={`/services?category=${category.id}`}
+              to="/services"
               className="inline-flex items-center gap-2 text-sm font-extrabold text-(--color-primary) hover:underline"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to {category.name}
+              <ArrowLeft className="h-4 w-4" /> Back to all services
             </Link>
 
             <p className="mt-6 text-sm font-extrabold uppercase tracking-[0.16em] text-(--color-primary)">
-              {category.name}
+              {selectedService ? category.name : "Service category"}
             </p>
             <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
-              {service.name}
+              {serviceTitle}
             </h1>
             <p className="mt-4 max-w-3xl text-base leading-7 text-(--color-muted)">
-              {service.description ||
-                "Get dependable local assistance, clear updates, and support from request to completion."}
+              {selectedService
+                ? `Request ${selectedService} from the ${category.name} category.`
+                : category.description ||
+                  `Explore the services available under ${category.name}.`}
             </p>
+            {category.services?.length ? (
+              <ul className="mt-6 space-y-3">
+                {category.services.map((service, index) => (
+                  <li
+                    key={`${service}-${index}`}
+                    className="flex items-start gap-3 text-sm leading-6 text-(--color-ink)"
+                  >
+                    <span
+                      className="mt-2 h-2 w-2 shrink-0 rounded-full bg-(--color-primary)"
+                      aria-hidden="true"
+                    />
+                    {service}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="mt-6 text-sm text-(--color-muted)">
+                No services have been added to this category yet.
+              </p>
+            )}
           </div>
         </article>
 
@@ -244,13 +263,13 @@ function SelectedService() {
             <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-(--color-primary)">
               {category.name}
             </p>
-            <h2 className="mt-1 text-xl font-black">{service.name}</h2>
+            <h2 className="mt-1 text-xl font-black">{category.name}</h2>
           </div>
 
           <div className="px-6 py-6">
             <div className="flex items-center gap-3">
               <img
-                src="/diaspora/images/alf.jpeg"
+                src="/images/alf.jpeg"
                 alt="Alfred"
                 className="h-16 w-16 shrink-0 rounded-full border-2 border-(--color-primary)/15 object-cover object-top"
               />
@@ -278,7 +297,7 @@ function SelectedService() {
                 <Phone className="h-5 w-5" /> Call
               </a>
               <a
-                href={`mailto:support@diasporaconnect.co.ke?subject=${encodeURIComponent(`Service request: ${service.name}`)}&body=${encodeURIComponent(requestMessage)}`}
+                href={`mailto:support@diasporaconnect.co.ke?subject=${encodeURIComponent(`Service request: ${serviceTitle}`)}&body=${encodeURIComponent(requestMessage)}`}
                 className="flex items-center justify-center gap-2 rounded-(--radius-small) bg-(--color-background) px-4 py-3 text-sm font-bold transition hover:text-(--color-primary)"
               >
                 <Mail className="h-5 w-5" /> Email
@@ -391,12 +410,12 @@ function SelectedService() {
                   Subject
                 </label>
                 <input
-                  key={service.id}
+                  key={`${category.id}-${selectedService ?? ""}`}
                   id="selected-service-subject"
                   name="subject"
                   type="text"
                   required
-                  defaultValue={service.name}
+                  defaultValue={serviceTitle}
                   className="mt-2 mb-4 w-full rounded-(--radius-small) border border-(--color-border) bg-(--color-background) px-4 py-3 text-sm outline-none transition focus:border-(--color-primary) focus:ring-2 focus:ring-(--color-primary)/15"
                 />
 
@@ -411,7 +430,11 @@ function SelectedService() {
                   name="description"
                   required
                   rows={5}
-                  placeholder={`Add details about your ${service.name.toLowerCase()} request...`}
+                  placeholder={
+                    selectedService
+                      ? `Add details about your ${selectedService.toLowerCase()} request...`
+                      : `Tell Alfred which ${category.name.toLowerCase()} service you need and add any request details...`
+                  }
                   className="mt-2 w-full resize-y rounded-(--radius-small) border border-(--color-border) bg-(--color-background) px-4 py-3 text-sm outline-none transition placeholder:text-(--color-muted) focus:border-(--color-primary) focus:ring-2 focus:ring-(--color-primary)/15"
                 />
                 <button

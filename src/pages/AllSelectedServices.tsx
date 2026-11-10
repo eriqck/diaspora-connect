@@ -90,6 +90,8 @@ function AllSelectedServices() {
   );
   const categoryName = searchParams.get("category");
   const highlightedService = searchParams.get("service");
+  const searchQuery = searchParams.get("search")?.trim() ?? "";
+  const normalizedSearchQuery = searchQuery.toLowerCase();
   const selectedCategory = categories.find(
     ({ id, name }) =>
       String(id) === categoryName ||
@@ -256,7 +258,24 @@ function AllSelectedServices() {
     );
   }
 
-  const visibleCategories = selectedCategory ? [selectedCategory] : categories;
+  const visibleCategories = (selectedCategory ? [selectedCategory] : categories)
+    .map((category) => {
+      if (!normalizedSearchQuery) return category;
+
+      const matchingServices = category.services?.filter((service) =>
+        service.toLowerCase().includes(normalizedSearchQuery),
+      );
+      const categoryMatches = `${category.name} ${category.description ?? ""}`
+        .toLowerCase()
+        .includes(normalizedSearchQuery);
+
+      if (!categoryMatches && !matchingServices?.length) return null;
+
+      return categoryMatches
+        ? category
+        : { ...category, services: matchingServices };
+    })
+    .filter((category): category is HomeCategory => category !== null);
 
   return (
     <main className="min-h-screen bg-(--color-background) text-(--color-ink)">
@@ -272,13 +291,16 @@ function AllSelectedServices() {
             Diaspora Help services
           </p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
-            {selectedCategory?.name ?? "All services"}
+            {selectedCategory?.name ??
+              (searchQuery ? "Search results" : "All services")}
           </h1>
           <p className="mt-4 max-w-2xl leading-7 text-white/75">
-            {selectedCategory
-              ? selectedCategory.description ||
-                `Explore the support available under ${selectedCategory.name.toLowerCase()} and choose the service that fits your request.`
-              : "Explore all the practical services available to help you handle important matters across Kenya."}
+            {searchQuery
+              ? `Showing services matching "${searchQuery}".`
+              : selectedCategory
+                ? selectedCategory.description ||
+                  `Explore the support available under ${selectedCategory.name.toLowerCase()} and choose the service that fits your request.`
+                : "Explore all the practical services available to help you handle important matters across Kenya."}
           </p>
         </div>
       </section>
@@ -313,91 +335,101 @@ function AllSelectedServices() {
           ))}
         </nav>
 
-        <div className="mt-9 space-y-12">
-          {visibleCategories.map((category) => (
-            <section
-              key={category.id}
-              aria-labelledby={`category-${category.id}`}
+        {searchQuery && visibleCategories.length === 0 ? (
+          <div className="mt-9 rounded-(--radius-medium) border border-dashed border-(--color-border) bg-(--color-surface) px-6 py-12 text-center">
+            <h2 className="text-xl font-black">No matching services found</h2>
+            <p className="mt-2 text-sm text-(--color-muted)">
+              Try a different service or category name.
+            </p>
+            <Link
+              to="/services"
+              className="mt-5 inline-flex rounded-(--radius-small) bg-(--color-primary) px-5 py-3 text-sm font-bold text-white transition hover:bg-(--color-primary-dark)"
             >
-              {!selectedCategory && (
-                <div className="mb-5 flex items-end justify-between gap-4 border-b border-(--color-border) pb-4">
-                  <div>
-                    <h2
-                      id={`category-${category.id}`}
-                      className="text-2xl font-black"
+              Browse all services
+            </Link>
+          </div>
+        ) : (
+          <div className="mt-9 space-y-12">
+            {visibleCategories.map((category) => (
+              <section
+                key={category.id}
+                aria-labelledby={`category-${category.id}`}
+              >
+                {!selectedCategory && (
+                  <div className="mb-5 flex items-end justify-between gap-4 border-b border-(--color-border) pb-4">
+                    <div>
+                      <h2
+                        id={`category-${category.id}`}
+                        className="text-2xl font-black"
+                      >
+                        {category.name}
+                      </h2>
+                      {category.description && (
+                        <p className="mt-2 max-w-3xl text-sm leading-6 text-(--color-muted)">
+                          {category.description}
+                        </p>
+                      )}
+                    </div>
+                    <Link
+                      to={`/services?category=${category.id}`}
+                      className="shrink-0 text-sm font-extrabold text-(--color-primary) hover:underline"
                     >
-                      {category.name}
-                    </h2>
-                    {category.description && (
-                      <p className="mt-2 max-w-3xl text-sm leading-6 text-(--color-muted)">
-                        {category.description}
-                      </p>
-                    )}
+                      View category
+                    </Link>
                   </div>
-                  <Link
-                    to={`/services?category=${category.id}`}
-                    className="shrink-0 text-sm font-extrabold text-(--color-primary) hover:underline"
-                  >
-                    View category
-                  </Link>
-                </div>
-              )}
+                )}
 
-              {category.sub_categories.length > 0 ? (
-                <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-                  {category.sub_categories.map((service) => {
-                    const isHighlighted =
-                      String(service.id) === highlightedService ||
-                      service.name.toLowerCase() ===
+                {category.services?.length ? (
+                  <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+                    {category.services.map((service, index) => {
+                      const isHighlighted =
+                        service.toLowerCase() ===
                         highlightedService?.toLowerCase();
 
-                    return (
-                      <article
-                        key={service.id}
-                        className={`flex min-h-80 flex-col overflow-hidden rounded-(--radius-medium) border bg-(--color-surface) shadow-sm transition hover:-translate-y-1 hover:shadow-(--shadow-soft) ${
-                          isHighlighted
-                            ? "border-(--color-primary) ring-2 ring-(--color-primary)/15"
-                            : "border-(--color-border)"
-                        }`}
-                      >
-                        <ServiceImage
-                          src={service.image}
-                          alt={service.name}
-                          className="aspect-video w-full"
-                        />
-                        <div className="flex flex-1 flex-col p-6">
-                          <h3 className="text-lg font-extrabold">{service.name}</h3>
-                          <p className="mt-2 text-sm leading-6 text-(--color-muted)">
-                            {service.description ||
-                              "Get dependable local assistance, clear updates, and support from request to completion."}
-                          </p>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMessageSubmitted(false);
-                              setSubmissionError(null);
-                              setSelectedRequest({
-                                category: category.name,
-                                service: service.name,
-                              });
-                            }}
-                            className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-extrabold text-(--color-primary) hover:underline"
-                          >
-                            Request this service <ArrowRight className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </article>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="rounded-(--radius-medium) border border-dashed border-(--color-border) bg-(--color-surface) px-6 py-12 text-center text-(--color-muted)">
-                  No services have been added to this category yet.
-                </div>
-              )}
-            </section>
-          ))}
-        </div>
+                      return (
+                        <article
+                          key={`${service}-${index}`}
+                          className={`flex min-h-80 flex-col overflow-hidden rounded-(--radius-medium) border bg-(--color-surface) shadow-sm transition hover:-translate-y-1 hover:shadow-(--shadow-soft) ${
+                            isHighlighted
+                              ? "border-(--color-primary) ring-2 ring-(--color-primary)/15"
+                              : "border-(--color-border)"
+                          }`}
+                        >
+                          <ServiceImage
+                            src={category.image}
+                            alt={category.name}
+                            className="aspect-video w-full"
+                          />
+                          <div className="flex flex-1 flex-col p-6">
+                            <h3 className="text-lg font-extrabold">{service}</h3>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setMessageSubmitted(false);
+                                setSubmissionError(null);
+                                setSelectedRequest({
+                                  category: category.name,
+                                  service,
+                                });
+                              }}
+                              className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-extrabold text-(--color-primary) hover:underline"
+                            >
+                              Request this service <ArrowRight className="h-4 w-4" />
+                            </button>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="rounded-(--radius-medium) border border-dashed border-(--color-border) bg-(--color-surface) px-6 py-12 text-center text-(--color-muted)">
+                    No services have been added to this category yet.
+                  </div>
+                )}
+              </section>
+            ))}
+          </div>
+        )}
       </section>
 
       <dialog

@@ -10,6 +10,7 @@ import {
 import type { AuthUser } from "../../formtypes/AuthTypes";
 
 type IconProps = { className?: string };
+type ServiceSearchResult = { title: string; categoryId: number; service?: string };
 
 const SearchIcon = ({ className }: IconProps) => (
   <svg
@@ -119,15 +120,20 @@ function NavBar() {
   const navigate = useNavigate();
   const categoryRail = useRef<HTMLDivElement>(null);
   const accountDropdown = useRef<HTMLDetailsElement>(null);
+  const searchForm = useRef<HTMLFormElement>(null);
   const submenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | null>(
     getStoredUser,
   );
+  const authenticatedUserName =
+    typeof authenticatedUser?.name === "string" ? authenticatedUser.name : "";
   const [isSigningOut, setIsSigningOut] = useState(false);
   const [categories, setCategories] = useState<HomeCategory[]>([]);
   const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [openCategory, setOpenCategory] = useState<{
     id: number;
     top: number;
@@ -185,10 +191,20 @@ function NavBar() {
       ) {
         setOpenCategory(null);
       }
+
+      if (
+        searchForm.current &&
+        !searchForm.current.contains(event.target as Node)
+      ) {
+        setSearchOpen(false);
+      }
     };
 
     const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenCategory(null);
+      if (event.key === "Escape") {
+        setOpenCategory(null);
+        setSearchOpen(false);
+      }
     };
 
     document.addEventListener("pointerdown", clickOut);
@@ -263,6 +279,29 @@ function NavBar() {
   const activeCategory = categories.find(
     ({ id }) => id === openCategory?.id,
   );
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const searchResults: ServiceSearchResult[] = normalizedSearch
+    ? categories.flatMap((category) => [
+        ...(category.name.toLowerCase().includes(normalizedSearch)
+          ? [{ title: category.name, categoryId: category.id }]
+          : []),
+        ...(category.services ?? [])
+          .filter((service) => service.toLowerCase().includes(normalizedSearch))
+          .map((service) => ({
+            title: service,
+            categoryId: category.id,
+            service,
+          })),
+      ])
+    : [];
+  const selectSearchResult = (result: ServiceSearchResult) => {
+    const serviceQuery = result.service
+      ? `?service=${encodeURIComponent(result.service)}`
+      : "";
+    navigate(`/services/${result.categoryId}${serviceQuery}`);
+    setSearchQuery("");
+    setSearchOpen(false);
+  };
 
   const handleSignOut = async () => {
     setIsSigningOut(true);
@@ -288,18 +327,27 @@ function NavBar() {
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:flex-nowrap lg:px-8">
         <Link
           to="/"
-          className="flex shrink-0 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-primary)"
+          className="flex shrink-0 items-center gap-0.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-primary)"
           aria-label="Diaspora Help home"
         >
+          <img
+            src="/images/md.png"
+            alt=""
+            className="h-18 w-18 shrink-0 rounded-md object-cover"
+          />
           <span className="text-xl font-extrabold tracking-tight sm:text-2xl">
-            Diaspora <span className="text-(--color-primary)">Help</span>
+            Msaidizi <span className="text-(--color-primary)">Diaspora</span>
           </span>
         </Link>
 
         <form
-          className="order-3 flex w-full min-w-0 items-center rounded-(--radius-medium) bg-(--color-background) p-1.5 ring-1 ring-inset ring-(--color-border) transition focus-within:ring-2 focus-within:ring-(--color-primary) lg:order-0 lg:mx-auto lg:max-w-2xl"
+          ref={searchForm}
+          className="order-3 relative flex w-full min-w-0 items-center rounded-(--radius-medium) bg-(--color-background) p-1.5 ring-1 ring-inset ring-(--color-border) transition focus-within:ring-2 focus-within:ring-(--color-primary) lg:order-0 lg:mx-auto lg:max-w-2xl"
           role="search"
-          onSubmit={(event) => event.preventDefault()}
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (searchResults[0]) selectSearchResult(searchResults[0]);
+          }}
         >
           <SearchIcon className="ml-3 h-5 w-5 shrink-0 text-(--color-muted)" />
           <label className="sr-only" htmlFor="service-search">
@@ -309,15 +357,50 @@ function NavBar() {
             id="service-search"
             name="search"
             type="search"
-            placeholder="Search services and locations"
+            value={searchQuery}
+            onFocus={() => setSearchOpen(true)}
+            onChange={(event) => {
+              setSearchQuery(event.target.value);
+              setSearchOpen(true);
+            }}
+            placeholder="Search services"
+            autoComplete="off"
+            aria-autocomplete="list"
+            aria-expanded={searchOpen && normalizedSearch.length > 0}
+            aria-controls="service-search-results"
             className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm outline-none placeholder:text-(--color-muted) sm:text-base"
           />
-          <button
-            type="submit"
-            className="rounded-(--radius-small) bg-(--color-secondary) px-5 py-2 text-sm font-bold text-(--color-ink) transition hover:bg-(--color-primary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) sm:px-7"
-          >
-            Search
-          </button>
+          {searchOpen && normalizedSearch && (
+            <div
+              id="service-search-results"
+              role="listbox"
+              aria-label="Matching services"
+              className="absolute inset-x-0 top-[calc(100%+0.5rem)] z-50 overflow-hidden rounded-(--radius-medium) border border-(--color-border) bg-(--color-surface) py-1 shadow-(--shadow-soft)"
+            >
+              {categoriesLoading ? (
+                <p className="px-4 py-3 text-sm text-(--color-muted)">
+                  Loading services...
+                </p>
+              ) : searchResults.length ? (
+                searchResults.map((result, index) => (
+                  <button
+                    key={`${result.categoryId}-${result.service ?? "category"}-${result.title}-${index}`}
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    onClick={() => selectSearchResult(result)}
+                    className="block w-full px-4 py-3 text-left text-sm font-semibold text-(--color-ink) transition hover:bg-(--color-background) hover:text-(--color-primary) focus-visible:bg-(--color-background) focus-visible:outline-none"
+                  >
+                    {result.title}
+                  </button>
+                ))
+              ) : (
+                <p className="px-4 py-3 text-sm text-(--color-muted)">
+                  No matching services found.
+                </p>
+              )}
+            </div>
+          )}
         </form>
 
         <details
@@ -327,13 +410,13 @@ function NavBar() {
           <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-2 font-semibold transition hover:bg-(--color-background) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) [&::-webkit-details-marker]:hidden">
             {authenticatedUser ? (
               <span className="grid h-8 w-8 place-items-center rounded-full bg-(--color-primary) text-sm font-black uppercase text-white">
-                {authenticatedUser.name.charAt(0)}
+                {authenticatedUserName.trim().charAt(0) || "A"}
               </span>
             ) : (
               <UserIcon className="h-6 w-6 text-(--color-primary)" />
             )}
             <span className="hidden max-w-36 truncate sm:inline">
-              {authenticatedUser?.name ?? "Account"}
+              {authenticatedUserName || "Account"}
             </span>
             <ChevronIcon className="h-4 w-4 transition-transform group-open:rotate-180" />
           </summary>
@@ -342,7 +425,7 @@ function NavBar() {
               <>
                 <div className="border-b border-(--color-border) px-4 py-3">
                   <p className="truncate text-sm font-extrabold text-(--color-ink)">
-                    {authenticatedUser.name}
+                    {authenticatedUserName || "Account"}
                   </p>
                   <p className="mt-0.5 truncate text-xs text-(--color-muted)">
                     {authenticatedUser.email}
@@ -484,69 +567,50 @@ function NavBar() {
                   className="aspect-16/8 w-full lg:aspect-4/3"
                 />
                 <div className="p-5">
-                  <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-(--color-primary)">
-                    Service category
-                  </p>
                   <h2 className="mt-2 text-xl font-black text-(--color-ink)">
                     {activeCategory.name}
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-(--color-muted)">
-                    {activeCategory.description ||
-                      `Explore trusted ${activeCategory.name.toLowerCase()} services.`}
-                  </p>
                   <Link
-                    to={`/services?category=${activeCategory.id}`}
+                    to={`/services/${activeCategory.id}`}
                     onClick={() => setOpenCategory(null)}
                     className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-(--color-primary) hover:underline"
                   >
-                    View all services
+                    Request this service
                     <ArrowIcon className="h-4 w-4" />
                   </Link>
                 </div>
               </section>
 
-              <section aria-labelledby="subcategory-heading">
+              <section aria-labelledby="category-services-heading">
                 <div className="mb-4 flex items-end justify-between gap-4">
                   <div>
                     <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-(--color-muted)">
                       Explore
                     </p>
-                    <h3 id="subcategory-heading" className="mt-1 text-lg font-black">
+                    <h3 id="category-services-heading" className="mt-1 text-lg font-black">
                       {activeCategory.name} services
                     </h3>
                   </div>
                   <span className="text-sm text-(--color-muted)">
-                    {activeCategory.sub_categories.length} options
+                    {activeCategory.services?.length ?? 0} options
                   </span>
                 </div>
 
-                {activeCategory.sub_categories.length > 0 ? (
-                  <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {activeCategory.sub_categories.map((subCategory) => (
-                      <Link
-                        key={subCategory.id}
-                        to={`/services/${activeCategory.id}/${subCategory.id}`}
-                        onClick={() => setOpenCategory(null)}
-                        className="group/card flex min-w-0 gap-3 rounded-(--radius-medium) border border-(--color-border) p-3 transition hover:-translate-y-0.5 hover:border-(--color-primary) hover:shadow-md focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)"
+                {activeCategory.services?.length ? (
+                  <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                    {activeCategory.services.map((service, index) => (
+                      <li
+                        key={`${service}-${index}`}
+                        className="flex min-w-0 items-start gap-3 rounded-(--radius-medium) border border-(--color-border) p-4 text-sm font-semibold text-(--color-ink)"
                       >
-                        <MenuImage
-                          src={subCategory.image}
-                          alt={subCategory.name}
-                          className="h-20 w-24 shrink-0 rounded-lg"
+                        <span
+                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-(--color-primary)"
+                          aria-hidden="true"
                         />
-                        <span className="min-w-0 py-1">
-                          <span className="flex items-start justify-between gap-2 font-extrabold text-(--color-ink) group-hover/card:text-(--color-primary)">
-                            <span>{subCategory.name}</span>
-                            <ArrowIcon className="mt-0.5 h-4 w-4 shrink-0 text-(--color-muted)" />
-                          </span>
-                          <span className="mt-1 line-clamp-2 text-xs leading-5 text-(--color-muted)">
-                            {subCategory.description ||
-                              `Learn more about ${subCategory.name.toLowerCase()}.`}
-                          </span>
-                        </span>
-                      </Link>
+                        {service}
+                      </li>
                     ))}
-                  </div>
+                  </ul>
                 ) : (
                   <div className="rounded-(--radius-medium) border border-dashed border-(--color-border) px-5 py-10 text-center text-sm text-(--color-muted)">
                     Services for this category are coming soon.

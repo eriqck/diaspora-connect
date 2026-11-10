@@ -96,32 +96,42 @@ const socialLinks = [
   { label: "X", href: "https://x.com", Icon: XIcon },
 ];
 
+const contactLinkClass =
+  "group inline-flex items-center gap-2.5 text-white/90 transition-colors hover:text-white hover:underline hover:underline-offset-4 focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white";
+
+const contactChipClass =
+  "grid h-6 w-6 place-items-center rounded-full bg-(--color-primary) text-white transition-colors group-hover:bg-(--color-secondary) group-focus-visible:bg-(--color-secondary)";
+
+const socialLinkClass =
+  "grid h-8 w-8 place-items-center rounded-full border border-white/20 text-white/80 transition-colors hover:border-(--color-secondary) hover:bg-(--color-secondary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white";
+
 function TopBar() {
   return (
     <aside
-      className="bg-(--color-primary-dark) text-white"
+      className="bg-(--color-accent) text-white"
       aria-label="Contact information"
     >
       <div className="mx-auto flex min-h-11 max-w-7xl flex-col items-center justify-between gap-2 px-4 py-2 text-sm sm:flex-row sm:px-6 lg:px-8">
-        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 sm:justify-start">
-          <a
-            className="group inline-flex items-center gap-2 transition-colors hover:text-(--color-secondary) focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-secondary)"
-            href="tel:+254720554657"
-          >
-            <PhoneIcon className="h-4 w-4 text-(--color-secondary)" />
+        <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 sm:justify-start">
+          <a className={contactLinkClass} href="tel:+254720554657">
+            <span className={contactChipClass}>
+              <PhoneIcon className="h-3.5 w-3.5" />
+            </span>
             <span>+254 720 554 657</span>
           </a>
           <a
-            className="group inline-flex items-center gap-2 transition-colors hover:text-(--color-secondary) focus-visible:rounded focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-secondary)"
+            className={contactLinkClass}
             href="mailto:support@diasporahelp.co.ke"
           >
-            <MailIcon className="h-4 w-4 text-(--color-secondary)" />
+            <span className={contactChipClass}>
+              <MailIcon className="h-3.5 w-3.5" />
+            </span>
             <span>support@diasporahelp.co.ke</span>
           </a>
         </div>
 
         <div
-          className="flex items-center gap-1"
+          className="flex items-center gap-1.5"
           aria-label="Follow Diaspora Connect"
         >
           <span className="mr-2 hidden text-xs font-medium tracking-wide text-white/70 md:inline">
@@ -130,7 +140,7 @@ function TopBar() {
           {socialLinks.map(({ label, href, Icon }) => (
             <a
               key={label}
-              className="grid h-8 w-8 place-items-center rounded-full text-white/80 transition-colors hover:bg-(--color-secondary) hover:text-(--color-ink) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-secondary)"
+              className={socialLinkClass}
               href={href}
               target="_blank"
               rel="noreferrer"
@@ -140,6 +150,14 @@ function TopBar() {
             </a>
           ))}
         </div>
+      </div>
+
+      {/* Flag stripes: black (the bar itself), white, red, white, green */}
+      <div aria-hidden="true" className="flex flex-col">
+        <div className="h-px bg-white" />
+        <div className="h-1 bg-(--color-secondary)" />
+        <div className="h-px bg-white" />
+        <div className="h-1 bg-(--color-primary)" />
       </div>
     </aside>
   );

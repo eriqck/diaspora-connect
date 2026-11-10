@@ -22,20 +22,14 @@ import {
 import { toast } from "sonner";
 import {
   addCategory,
-  addSubCategory,
   deleteCategory,
-  deleteSubCategory,
   updateCategory,
-  updateSubCategory,
   viewCategories,
-  viewSubCategories,
 } from "../../apiservices/AdminService";
 import type {
   AdminApiError,
   Category,
   CategoryFormValues,
-  SubCategory,
-  SubCategoryFormValues,
 } from "../../formtypes/AdminTypes";
 import Pagination from "../components/Pagination";
 
@@ -43,14 +37,7 @@ const ITEMS_PER_PAGE = 8;
 
 const emptyForm: CategoryFormValues = {
   name: "",
-  description: "",
-  image: null,
-};
-
-const emptySubCategoryForm: SubCategoryFormValues = {
-  categoryId: 0,
-  name: "",
-  description: "",
+  services: "",
   image: null,
 };
 
@@ -74,16 +61,9 @@ function Categories() {
   const imageInput = useRef<HTMLInputElement>(null);
   const dragDepth = useRef(0);
   const previewObjectUrl = useRef<string | null>(null);
-  const subCategoryDialog = useRef<HTMLDialogElement>(null);
-  const subCategoryDeleteDialog = useRef<HTMLDialogElement>(null);
-  const subCategoryImageInput = useRef<HTMLInputElement>(null);
-  const subCategoryPreviewObjectUrl = useRef<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [subCategorySearch, setSubCategorySearch] = useState("");
   const [categoryPage, setCategoryPage] = useState(1);
-  const [subCategoryPage, setSubCategoryPage] = useState(1);
   const [formValues, setFormValues] = useState<CategoryFormValues>(emptyForm);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<Category | null>(null);
@@ -93,20 +73,6 @@ function Categories() {
   const [isDraggingImage, setIsDraggingImage] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
-  const [subCategoryForm, setSubCategoryForm] =
-    useState<SubCategoryFormValues>(emptySubCategoryForm);
-  const [editingSubCategory, setEditingSubCategory] =
-    useState<SubCategory | null>(null);
-  const [subCategoryToDelete, setSubCategoryToDelete] =
-    useState<SubCategory | null>(null);
-  const [isSubCategoryLoading, setIsSubCategoryLoading] = useState(true);
-  const [isSubCategorySaving, setIsSubCategorySaving] = useState(false);
-  const [isSubCategoryDeleting, setIsSubCategoryDeleting] = useState(false);
-  const [isDraggingSubCategoryImage, setIsDraggingSubCategoryImage] =
-    useState(false);
-  const [subCategoryImagePreview, setSubCategoryImagePreview] =
-    useState<string | null>(null);
-  const [subCategoryError, setSubCategoryError] = useState<string | null>(null);
 
   const loadCategories = useCallback(async (showLoader = true) => {
     if (showLoader) setIsLoading(true);
@@ -119,22 +85,6 @@ function Categories() {
       setLoadError(getErrorMessage(error, "Unable to load categories right now."));
     } finally {
       if (showLoader) setIsLoading(false);
-    }
-  }, []);
-
-  const loadSubCategories = useCallback(async (showLoader = true) => {
-    if (showLoader) setIsSubCategoryLoading(true);
-    setSubCategoryError(null);
-
-    try {
-      const response = await viewSubCategories();
-      setSubCategories(response.sub_categories ?? []);
-    } catch (error) {
-      setSubCategoryError(
-        getErrorMessage(error, "Unable to load sub-categories right now."),
-      );
-    } finally {
-      if (showLoader) setIsSubCategoryLoading(false);
     }
   }, []);
 
@@ -162,34 +112,8 @@ function Categories() {
   }, []);
 
   useEffect(() => {
-    let isMounted = true;
-
-    void viewSubCategories()
-      .then((response) => {
-        if (isMounted) setSubCategories(response.sub_categories ?? []);
-      })
-      .catch((error: unknown) => {
-        if (isMounted) {
-          setSubCategoryError(
-            getErrorMessage(error, "Unable to load sub-categories right now."),
-          );
-        }
-      })
-      .finally(() => {
-        if (isMounted) setIsSubCategoryLoading(false);
-      });
-
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  useEffect(() => {
     return () => {
       if (previewObjectUrl.current) URL.revokeObjectURL(previewObjectUrl.current);
-      if (subCategoryPreviewObjectUrl.current) {
-        URL.revokeObjectURL(subCategoryPreviewObjectUrl.current);
-      }
     };
   }, []);
 
@@ -200,41 +124,21 @@ function Categories() {
     return categories.filter(
       (category) =>
         category.name.toLowerCase().includes(query) ||
-        category.description?.toLowerCase().includes(query),
+        category.description?.toLowerCase().includes(query) ||
+        category.services?.some((service) =>
+          service.toLowerCase().includes(query),
+        ),
     );
   }, [categories, searchTerm]);
 
-  const filteredSubCategories = useMemo(() => {
-    const query = subCategorySearch.trim().toLowerCase();
-    if (!query) return subCategories;
-
-    return subCategories.filter(
-      (subCategory) =>
-        subCategory.name.toLowerCase().includes(query) ||
-        subCategory.description?.toLowerCase().includes(query) ||
-        subCategory.category?.name.toLowerCase().includes(query),
-    );
-  }, [subCategories, subCategorySearch]);
-
   const categoryTotalPages = Math.ceil(filteredCategories.length / ITEMS_PER_PAGE);
-  const subCategoryTotalPages = Math.ceil(
-    filteredSubCategories.length / ITEMS_PER_PAGE,
-  );
   const activeCategoryPage = Math.min(
     categoryPage,
     Math.max(1, categoryTotalPages),
   );
-  const activeSubCategoryPage = Math.min(
-    subCategoryPage,
-    Math.max(1, subCategoryTotalPages),
-  );
   const paginatedCategories = filteredCategories.slice(
     (activeCategoryPage - 1) * ITEMS_PER_PAGE,
     activeCategoryPage * ITEMS_PER_PAGE,
-  );
-  const paginatedSubCategories = filteredSubCategories.slice(
-    (activeSubCategoryPage - 1) * ITEMS_PER_PAGE,
-    activeSubCategoryPage * ITEMS_PER_PAGE,
   );
 
   const openAddDialog = () => {
@@ -253,7 +157,7 @@ function Categories() {
     setEditingCategory(category);
     setFormValues({
       name: category.name,
-      description: category.description ?? "",
+      services: category.services?.join("\n") ?? "",
       image: null,
     });
     setImagePreview(category.image);
@@ -373,11 +277,6 @@ function Categories() {
       setCategories((current) =>
         current.filter((category) => category.id !== categoryToDelete.id),
       );
-      setSubCategories((current) =>
-        current.filter(
-          (subCategory) => subCategory.category_id !== categoryToDelete.id,
-        ),
-      );
       toast.success(response.message ?? "Category deleted successfully.");
       deleteDialog.current?.close();
       setCategoryToDelete(null);
@@ -385,138 +284,6 @@ function Categories() {
       toast.error(getErrorMessage(error, "Unable to delete the category."));
     } finally {
       setIsDeleting(false);
-    }
-  };
-
-  const resetSubCategoryForm = () => {
-    if (subCategoryPreviewObjectUrl.current) {
-      URL.revokeObjectURL(subCategoryPreviewObjectUrl.current);
-    }
-    subCategoryPreviewObjectUrl.current = null;
-    setSubCategoryForm(emptySubCategoryForm);
-    setEditingSubCategory(null);
-    setSubCategoryImagePreview(null);
-    setIsDraggingSubCategoryImage(false);
-    if (subCategoryImageInput.current) subCategoryImageInput.current.value = "";
-  };
-
-  const openAddSubCategoryDialog = () => {
-    if (categories.length === 0) {
-      toast.info("Add a category before creating a sub-category.");
-      return;
-    }
-
-    resetSubCategoryForm();
-    setSubCategoryForm({ ...emptySubCategoryForm, categoryId: categories[0].id });
-    subCategoryDialog.current?.showModal();
-  };
-
-  const openEditSubCategoryDialog = (subCategory: SubCategory) => {
-    resetSubCategoryForm();
-    setEditingSubCategory(subCategory);
-    setSubCategoryForm({
-      categoryId: subCategory.category_id,
-      name: subCategory.name,
-      description: subCategory.description ?? "",
-      image: null,
-    });
-    setSubCategoryImagePreview(subCategory.image);
-    subCategoryDialog.current?.showModal();
-  };
-
-  const closeSubCategoryDialog = () => {
-    if (isSubCategorySaving) return;
-    subCategoryDialog.current?.close();
-    resetSubCategoryForm();
-  };
-
-  const selectSubCategoryImage = (file: File | null) => {
-    if (!file) return;
-
-    if (!(["image/jpeg", "image/png"] as string[]).includes(file.type)) {
-      toast.error("Please choose a JPG or PNG image.");
-      return;
-    }
-
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error("The image must be 5 MB or smaller.");
-      return;
-    }
-
-    if (subCategoryPreviewObjectUrl.current) {
-      URL.revokeObjectURL(subCategoryPreviewObjectUrl.current);
-    }
-    const objectUrl = URL.createObjectURL(file);
-    subCategoryPreviewObjectUrl.current = objectUrl;
-    setSubCategoryImagePreview(objectUrl);
-    setSubCategoryForm((current) => ({ ...current, image: file }));
-  };
-
-  const handleSubCategoryDrop = (event: DragEvent<HTMLLabelElement>) => {
-    event.preventDefault();
-    setIsDraggingSubCategoryImage(false);
-    if (!isSubCategorySaving) {
-      selectSubCategoryImage(event.dataTransfer.files?.[0] ?? null);
-    }
-  };
-
-  const handleSubCategorySubmit = async (
-    event: FormEvent<HTMLFormElement>,
-  ) => {
-    event.preventDefault();
-    setIsSubCategorySaving(true);
-
-    try {
-      const response = editingSubCategory
-        ? await updateSubCategory(editingSubCategory.id, subCategoryForm)
-        : await addSubCategory(subCategoryForm);
-
-      toast.success(
-        response.message ??
-          `Sub-category ${editingSubCategory ? "updated" : "added"} successfully.`,
-      );
-      subCategoryDialog.current?.close();
-      resetSubCategoryForm();
-      await loadSubCategories(false);
-    } catch (error) {
-      toast.error(
-        getErrorMessage(
-          error,
-          `Unable to ${editingSubCategory ? "update" : "add"} the sub-category.`,
-        ),
-      );
-    } finally {
-      setIsSubCategorySaving(false);
-    }
-  };
-
-  const openDeleteSubCategoryDialog = (subCategory: SubCategory) => {
-    setSubCategoryToDelete(subCategory);
-    subCategoryDeleteDialog.current?.showModal();
-  };
-
-  const closeDeleteSubCategoryDialog = () => {
-    if (isSubCategoryDeleting) return;
-    subCategoryDeleteDialog.current?.close();
-    setSubCategoryToDelete(null);
-  };
-
-  const handleDeleteSubCategory = async () => {
-    if (!subCategoryToDelete) return;
-    setIsSubCategoryDeleting(true);
-
-    try {
-      const response = await deleteSubCategory(subCategoryToDelete.id);
-      setSubCategories((current) =>
-        current.filter((item) => item.id !== subCategoryToDelete.id),
-      );
-      toast.success(response.message ?? "Sub-category deleted successfully.");
-      subCategoryDeleteDialog.current?.close();
-      setSubCategoryToDelete(null);
-    } catch (error) {
-      toast.error(getErrorMessage(error, "Unable to delete the sub-category."));
-    } finally {
-      setIsSubCategoryDeleting(false);
     }
   };
 
@@ -627,9 +394,17 @@ function Categories() {
 
                 <div className="p-3.5">
                   <h3 className="truncate text-sm font-black">{category.name}</h3>
-                  <p className="mt-1.5 min-h-9 line-clamp-2 text-xs leading-4.5 text-(--color-muted)">
-                    {category.description || "No description provided."}
-                  </p>
+                  {category.services?.length ? (
+                    <ul className="mt-1.5 min-h-9 list-inside list-disc space-y-0.5 text-xs leading-4.5 text-(--color-muted)">
+                      {category.services.map((service, index) => (
+                        <li key={`${service}-${index}`}>{service}</li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="mt-1.5 min-h-9 text-xs leading-4.5 text-(--color-muted)">
+                      No services added.
+                    </p>
+                  )}
                   <div className="mt-3 flex gap-2 border-t border-(--color-border) pt-3">
                     <button
                       type="button"
@@ -653,129 +428,6 @@ function Categories() {
               currentPage={activeCategoryPage}
               totalPages={categoryTotalPages}
               onPageChange={setCategoryPage}
-              className="col-span-full pt-3"
-            />
-          </div>
-        )}
-      </section>
-
-      <section className="mt-7 overflow-hidden rounded-(--radius-medium) border border-(--color-border) bg-(--color-surface) shadow-(--shadow-soft)">
-        <div className="flex flex-col gap-4 border-b border-(--color-border) p-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
-          <div>
-            <h2 className="text-base font-black">Sub-categories</h2>
-            <p className="mt-1 text-xs text-(--color-muted)">
-              {subCategories.length} {subCategories.length === 1 ? "sub-category" : "sub-categories"} in total
-            </p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <label className="relative block w-full sm:w-64">
-              <span className="sr-only">Search sub-categories</span>
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-(--color-muted)" />
-              <input
-                type="search"
-                value={subCategorySearch}
-                onChange={(event) => {
-                  setSubCategorySearch(event.target.value);
-                  setSubCategoryPage(1);
-                }}
-                placeholder="Search sub-categories..."
-                className="w-full rounded-xl border border-(--color-border) bg-(--color-background) py-2.5 pl-10 pr-4 text-sm outline-none transition focus:border-(--color-primary) focus:ring-3 focus:ring-(--color-primary)/10"
-              />
-            </label>
-            <button
-              type="button"
-              onClick={openAddSubCategoryDialog}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-(--color-primary) px-4 py-2.5 text-sm font-extrabold text-white transition hover:bg-(--color-primary-dark)"
-            >
-              <Plus className="h-4 w-4" /> Add sub-category
-            </button>
-          </div>
-        </div>
-
-        {isSubCategoryLoading && (
-          <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4" aria-label="Loading sub-categories">
-            {[0, 1, 2, 3].map((item) => (
-              <div key={item} className="h-60 animate-pulse rounded-xl bg-(--color-background)" />
-            ))}
-          </div>
-        )}
-
-        {!isSubCategoryLoading && subCategoryError && (
-          <div className="p-6 text-center">
-            <p role="alert" className="text-sm font-semibold text-red-700">{subCategoryError}</p>
-            <button
-              type="button"
-              onClick={() => void loadSubCategories()}
-              className="mt-4 rounded-lg border border-(--color-border) px-4 py-2 text-sm font-bold hover:border-(--color-primary) hover:text-(--color-primary)"
-            >
-              Try again
-            </button>
-          </div>
-        )}
-
-        {!isSubCategoryLoading && !subCategoryError && filteredSubCategories.length === 0 && (
-          <div className="px-5 py-14 text-center">
-            <ImageIcon className="mx-auto h-8 w-8 text-(--color-muted)" />
-            <h3 className="mt-3 text-sm font-black">
-              {subCategorySearch ? "No matching sub-categories" : "No sub-categories yet"}
-            </h3>
-            <p className="mt-1 text-xs text-(--color-muted)">
-              {subCategorySearch ? "Try a different search term." : "Add a sub-category to organise your services."}
-            </p>
-          </div>
-        )}
-
-        {!isSubCategoryLoading && !subCategoryError && filteredSubCategories.length > 0 && (
-          <div className="grid gap-3 p-5 sm:grid-cols-2 sm:p-6 lg:grid-cols-4">
-            {paginatedSubCategories.map((subCategory) => (
-              <article
-                key={subCategory.id}
-                className="group overflow-hidden rounded-xl border border-(--color-border) bg-white transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <div className="relative aspect-video overflow-hidden bg-(--color-background)">
-                  {subCategory.image ? (
-                    <img
-                      src={subCategory.image}
-                      alt=""
-                      className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
-                    />
-                  ) : (
-                    <div className="grid h-full place-items-center text-(--color-muted)">
-                      <ImageIcon className="h-9 w-9" />
-                    </div>
-                  )}
-                  <span className="absolute left-2.5 top-2.5 max-w-[calc(100%-1.25rem)] truncate rounded-full bg-white/95 px-2.5 py-1 text-[10px] font-extrabold text-(--color-primary-dark) shadow-sm">
-                    {subCategory.category?.name ?? "Unassigned"}
-                  </span>
-                </div>
-                <div className="p-3.5">
-                  <h3 className="truncate text-sm font-black">{subCategory.name}</h3>
-                  <p className="mt-1.5 min-h-9 line-clamp-2 text-xs leading-4.5 text-(--color-muted)">
-                    {subCategory.description || "No description provided."}
-                  </p>
-                  <div className="mt-3 flex gap-2 border-t border-(--color-border) pt-3">
-                    <button
-                      type="button"
-                      onClick={() => openEditSubCategoryDialog(subCategory)}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-(--color-primary)/10 px-3 py-2 text-xs font-extrabold text-(--color-primary) transition hover:bg-(--color-primary) hover:text-white"
-                    >
-                      <Pencil className="h-3.5 w-3.5" /> Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openDeleteSubCategoryDialog(subCategory)}
-                      className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-red-50 px-3 py-2 text-xs font-extrabold text-red-600 transition hover:bg-red-600 hover:text-white"
-                    >
-                      <Trash2 className="h-3.5 w-3.5" /> Delete
-                    </button>
-                  </div>
-                </div>
-              </article>
-            ))}
-            <Pagination
-              currentPage={activeSubCategoryPage}
-              totalPages={subCategoryTotalPages}
-              onPageChange={setSubCategoryPage}
               className="col-span-full pt-3"
             />
           </div>
@@ -832,19 +484,18 @@ function Categories() {
 
             <div>
               <div className="flex items-center justify-between gap-4">
-                <label htmlFor="category-description" className="text-sm font-bold">Description</label>
-                <span className="text-xs text-(--color-muted)">{formValues.description.length}/255</span>
+                <label htmlFor="category-services" className="text-sm font-bold">Services</label>
+                <span className="text-xs text-(--color-muted)">One service per line</span>
               </div>
               <textarea
-                id="category-description"
-                value={formValues.description}
+                id="category-services"
+                value={formValues.services}
                 onChange={(event) =>
-                  setFormValues((current) => ({ ...current, description: event.target.value }))
+                  setFormValues((current) => ({ ...current, services: event.target.value }))
                 }
-                maxLength={255}
                 rows={4}
                 disabled={isSaving}
-                placeholder="Briefly describe this category"
+                placeholder={"e.g. Property inspection\nLand title search"}
                 className={`${inputClass} resize-none`}
               />
             </div>
@@ -967,219 +618,6 @@ function Categories() {
         </div>
       </dialog>
 
-      <dialog
-        ref={subCategoryDialog}
-        onCancel={(event) => {
-          if (isSubCategorySaving) event.preventDefault();
-        }}
-        className="m-auto max-h-[calc(100vh-2rem)] w-[calc(100%-2rem)] max-w-lg overflow-y-auto rounded-2xl bg-white p-0 text-(--color-ink) shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-[2px]"
-      >
-        <form onSubmit={handleSubCategorySubmit}>
-          <div className="sticky top-0 z-10 flex items-start justify-between border-b border-(--color-border) bg-white px-5 py-4 sm:px-6">
-            <div>
-              <h2 className="text-lg font-black">
-                {editingSubCategory ? "Edit sub-category" : "Add sub-category"}
-              </h2>
-              <p className="mt-1 text-xs text-(--color-muted)">
-                Choose its parent category and add the details below.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={closeSubCategoryDialog}
-              disabled={isSubCategorySaving}
-              className="grid h-9 w-9 place-items-center rounded-lg text-(--color-muted) hover:bg-(--color-background) disabled:opacity-50"
-              aria-label="Close dialog"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
-
-          <div className="space-y-5 px-5 py-5 sm:px-6">
-            <div>
-              <label htmlFor="sub-category-parent" className="text-sm font-bold">
-                Parent category <span className="text-red-600">*</span>
-              </label>
-              <select
-                id="sub-category-parent"
-                value={subCategoryForm.categoryId}
-                onChange={(event) =>
-                  setSubCategoryForm((current) => ({
-                    ...current,
-                    categoryId: Number(event.target.value),
-                  }))
-                }
-                required
-                disabled={isSubCategorySaving}
-                className={inputClass}
-              >
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>{category.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label htmlFor="sub-category-name" className="text-sm font-bold">
-                Sub-category name <span className="text-red-600">*</span>
-              </label>
-              <input
-                id="sub-category-name"
-                value={subCategoryForm.name}
-                onChange={(event) =>
-                  setSubCategoryForm((current) => ({ ...current, name: event.target.value }))
-                }
-                maxLength={255}
-                required
-                autoFocus
-                disabled={isSubCategorySaving}
-                placeholder="e.g. Property inspection"
-                className={inputClass}
-              />
-            </div>
-
-            <div>
-              <div className="flex items-center justify-between gap-4">
-                <label htmlFor="sub-category-description" className="text-sm font-bold">Description</label>
-                <span className="text-xs text-(--color-muted)">{subCategoryForm.description.length}/255</span>
-              </div>
-              <textarea
-                id="sub-category-description"
-                value={subCategoryForm.description}
-                onChange={(event) =>
-                  setSubCategoryForm((current) => ({ ...current, description: event.target.value }))
-                }
-                maxLength={255}
-                rows={3}
-                disabled={isSubCategorySaving}
-                placeholder="Briefly describe this sub-category"
-                className={`${inputClass} resize-none`}
-              />
-            </div>
-
-            <div>
-              <label htmlFor="sub-category-image" className="text-sm font-bold">Sub-category image</label>
-              {subCategoryImagePreview && (
-                <div className="mt-2 overflow-hidden rounded-xl border border-(--color-border) bg-(--color-background)">
-                  <img
-                    src={subCategoryImagePreview}
-                    alt={`${subCategoryForm.name || editingSubCategory?.name || "Sub-category"} preview`}
-                    className="h-40 w-full object-cover"
-                  />
-                </div>
-              )}
-              <label
-                htmlFor="sub-category-image"
-                onDragEnter={(event) => {
-                  event.preventDefault();
-                  if (!isSubCategorySaving) setIsDraggingSubCategoryImage(true);
-                }}
-                onDragOver={(event) => {
-                  event.preventDefault();
-                  event.dataTransfer.dropEffect = "copy";
-                }}
-                onDragLeave={(event) => {
-                  event.preventDefault();
-                  if (!event.currentTarget.contains(event.relatedTarget as Node)) {
-                    setIsDraggingSubCategoryImage(false);
-                  }
-                }}
-                onDrop={handleSubCategoryDrop}
-                className={`mt-2 flex min-h-28 cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 text-center transition sm:flex-row sm:gap-4 sm:text-left ${
-                  isDraggingSubCategoryImage
-                    ? "scale-[1.01] border-(--color-primary) bg-(--color-primary)/10"
-                    : "border-(--color-border) bg-(--color-background) hover:border-(--color-primary)"
-                } ${isSubCategorySaving ? "pointer-events-none opacity-60" : ""}`}
-              >
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-(--color-primary)/10 text-(--color-primary)">
-                  <Upload className="h-5 w-5" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-sm font-bold">
-                    {isDraggingSubCategoryImage
-                      ? "Drop the image here"
-                      : subCategoryForm.image?.name ??
-                        (editingSubCategory?.image
-                          ? "Drag an image here to replace it"
-                          : "Drag and drop an image here")}
-                  </span>
-                  <span className="mt-1 block text-xs text-(--color-muted)">
-                    {subCategoryForm.image
-                      ? `${(subCategoryForm.image.size / 1024 / 1024).toFixed(2)} MB | Click to choose another`
-                      : "or click to browse | JPG or PNG, up to 5 MB"}
-                  </span>
-                </span>
-              </label>
-              <input
-                ref={subCategoryImageInput}
-                id="sub-category-image"
-                type="file"
-                accept="image/jpeg,image/png,.jpg,.jpeg,.png"
-                onChange={(event) => selectSubCategoryImage(event.target.files?.[0] ?? null)}
-                disabled={isSubCategorySaving}
-                className="sr-only"
-              />
-            </div>
-          </div>
-
-          <div className="sticky bottom-0 flex justify-end gap-3 border-t border-(--color-border) bg-(--color-background) px-5 py-4 sm:px-6">
-            <button
-              type="button"
-              onClick={closeSubCategoryDialog}
-              disabled={isSubCategorySaving}
-              className="rounded-xl border border-(--color-border) bg-white px-4 py-2.5 text-sm font-bold disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubCategorySaving || subCategoryForm.categoryId === 0}
-              className="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-(--color-primary) px-5 py-2.5 text-sm font-extrabold text-white hover:bg-(--color-primary-dark) disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubCategorySaving && <LoaderCircle className="h-4 w-4 animate-spin" />}
-              {isSubCategorySaving ? "Saving..." : editingSubCategory ? "Save changes" : "Add sub-category"}
-            </button>
-          </div>
-        </form>
-      </dialog>
-
-      <dialog
-        ref={subCategoryDeleteDialog}
-        onCancel={(event) => {
-          if (isSubCategoryDeleting) event.preventDefault();
-        }}
-        className="m-auto w-[calc(100%-2rem)] max-w-md rounded-2xl bg-white p-0 text-(--color-ink) shadow-2xl backdrop:bg-slate-950/50 backdrop:backdrop-blur-[2px]"
-      >
-        <div className="p-6">
-          <span className="grid h-12 w-12 place-items-center rounded-xl bg-red-50 text-red-600">
-            <Trash2 className="h-5 w-5" />
-          </span>
-          <h2 className="mt-4 text-lg font-black">Delete sub-category?</h2>
-          <p className="mt-2 text-sm leading-6 text-(--color-muted)">
-            <span className="font-bold text-(--color-ink)">{subCategoryToDelete?.name}</span>{" "}
-            will be permanently removed. This action cannot be undone.
-          </p>
-          <div className="mt-6 flex justify-end gap-3">
-            <button
-              type="button"
-              onClick={closeDeleteSubCategoryDialog}
-              disabled={isSubCategoryDeleting}
-              className="rounded-xl border border-(--color-border) px-4 py-2.5 text-sm font-bold disabled:opacity-50"
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              onClick={() => void handleDeleteSubCategory()}
-              disabled={isSubCategoryDeleting}
-              className="inline-flex min-w-36 items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-extrabold text-white hover:bg-red-700 disabled:opacity-60"
-            >
-              {isSubCategoryDeleting && <LoaderCircle className="h-4 w-4 animate-spin" />}
-              {isSubCategoryDeleting ? "Deleting..." : "Delete sub-category"}
-            </button>
-          </div>
-        </div>
-      </dialog>
     </div>
   );
 }

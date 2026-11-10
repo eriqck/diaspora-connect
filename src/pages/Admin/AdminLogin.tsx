@@ -100,7 +100,7 @@ export default function AdminLogin() {
         />
 
         <Link to="/" className="relative w-fit text-2xl font-black tracking-tight">
-          Diaspora <span className="text-(--color-secondary)">Help</span>
+          Msaidizi <span className="text-(--color-secondary)">Diaspora</span>
         </Link>
 
         <div className="relative max-w-xl">

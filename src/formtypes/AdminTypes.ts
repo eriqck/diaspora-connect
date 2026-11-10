@@ -2,6 +2,7 @@ export type Category = {
   id: number;
   name: string;
   description: string | null;
+  services?: string[] | null;
   image: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -9,7 +10,7 @@ export type Category = {
 
 export type CategoryFormValues = {
   name: string;
-  description: string;
+  services: string;
   image: File | null;
 };
 
