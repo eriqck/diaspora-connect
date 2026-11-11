@@ -59,7 +59,12 @@ function App() {
             element={
               <ServiceLandingPage
                 title="Family Errands"
-                description="From everyday errands to practical needs for family back home, tell us what needs attention and where. We will discuss the support available and coordinate next steps with you."
+                includedDetails={[
+                  "Contractor and tradesperson supervision for repairs and home maintenance, helping prevent overcharging and substandard work.",
+                  "Document collection and attestation from local government offices.",
+                  "School and tuition support, including fee payments, progress reports, uniforms, and school supplies.",
+                  "Legal and banking representation, including notarized power-of-attorney submissions, local bank account support, and estate matters.",
+                ]}
                 whatsappMessage="Hello, I would like to ask about family errands and concierge support."
                 image={familyErrandsImage}
                 imageAlt="A person carrying shopping bags from a car"

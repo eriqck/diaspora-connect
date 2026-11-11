@@ -70,9 +70,14 @@ const serviceInformation: Record<
     ],
   },
   property: {
-    introduction: "Airport Transfers",
+    introduction:
+      "Land & Property Purchase — Category: High Risk Area • Timeline: 3–5 Working Days.",
     details: [
-      "Meet & Greet Service: A professional driver will meet you at the arrivals exit holding a personalized name board.",
+      "Official Search at County & Ministry of Lands (Ardhi House)",
+      "Green Card history & encumbrance audit",
+      "Physical survey & beacon verification with registered surveyor",
+      "Seller identity & spouse consent verification",
+      "Comprehensive Legal Risk Report with Advocate Stamp",
     ],
   },
   "shares & stocks": {
