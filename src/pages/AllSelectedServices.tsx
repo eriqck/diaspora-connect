@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
+import ServiceDetailsDialog from "./components/ServiceDetailsDialog";
 import {
   fetchCategories,
   submitRequest,
@@ -28,6 +29,10 @@ import type {
 type ServiceRequest = {
   category: string;
   service: string;
+};
+
+type ServiceDetails = ServiceRequest & {
+  categoryId: number;
 };
 
 const getStoredUser = (): AuthUser | null => {
@@ -79,6 +84,7 @@ function AllSelectedServices() {
   const [searchParams] = useSearchParams();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [selectedRequest, setSelectedRequest] = useState<ServiceRequest | null>(null);
+  const [serviceDetails, setServiceDetails] = useState<ServiceDetails | null>(null);
   const [messageSubmitted, setMessageSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
@@ -288,7 +294,7 @@ function AllSelectedServices() {
             <ArrowLeft className="h-4 w-4" /> Back to home
           </Link>
           <p className="mt-8 text-sm font-extrabold uppercase tracking-[0.16em] text-(--color-secondary)">
-            Diaspora Help services
+            Msaidizi Diaspora services
           </p>
           <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
             {selectedCategory?.name ??
@@ -402,20 +408,35 @@ function AllSelectedServices() {
                           />
                           <div className="flex flex-1 flex-col p-6">
                             <h3 className="text-lg font-extrabold">{service}</h3>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setMessageSubmitted(false);
-                                setSubmissionError(null);
-                                setSelectedRequest({
-                                  category: category.name,
-                                  service,
-                                });
-                              }}
-                              className="mt-auto inline-flex items-center gap-2 pt-6 text-sm font-extrabold text-(--color-primary) hover:underline"
-                            >
-                              Request this service <ArrowRight className="h-4 w-4" />
-                            </button>
+                            <div className="mt-auto flex items-center justify-between gap-3 pt-6">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setServiceDetails({
+                                    category: category.name,
+                                    service,
+                                    categoryId: category.id,
+                                  })
+                                }
+                                className="rounded-full border border-(--color-primary)/30 px-3 py-1.5 text-xs font-extrabold text-(--color-primary) transition hover:bg-(--color-primary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)"
+                              >
+                                Details
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMessageSubmitted(false);
+                                  setSubmissionError(null);
+                                  setSelectedRequest({
+                                    category: category.name,
+                                    service,
+                                  });
+                                }}
+                                className="inline-flex items-center gap-2 text-sm font-extrabold text-(--color-primary) hover:underline"
+                              >
+                                Request this service <ArrowRight className="h-4 w-4" />
+                              </button>
+                            </div>
                           </div>
                         </article>
                       );
@@ -432,6 +453,14 @@ function AllSelectedServices() {
         )}
       </section>
 
+      {serviceDetails && (
+        <ServiceDetailsDialog
+          category={serviceDetails.category}
+          service={serviceDetails.service}
+          requestHref={`/services/${serviceDetails.categoryId}?service=${encodeURIComponent(serviceDetails.service)}`}
+          onClose={() => setServiceDetails(null)}
+        />
+      )}
       <dialog
         ref={dialogRef}
         onClose={() => {
@@ -495,7 +524,7 @@ function AllSelectedServices() {
                   <Phone className="h-5 w-5" /> Call
                 </a>
                 <a
-                  href={`mailto:support@diasporaconnect.co.ke?subject=${encodeURIComponent(`Service request: ${selectedRequest.service}`)}&body=${encodeURIComponent(requestMessage)}`}
+                  href={`mailto:support@msaidizidiaspora.co.ke?subject=${encodeURIComponent(`Service request: ${selectedRequest.service}`)}&body=${encodeURIComponent(requestMessage)}`}
                   className="flex items-center justify-center gap-2 rounded-(--radius-small) bg-(--color-background) px-4 py-3 font-bold transition hover:text-(--color-primary)"
                 >
                   <Mail className="h-5 w-5" /> Email

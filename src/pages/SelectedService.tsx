@@ -18,6 +18,7 @@ import {
   submitRequest,
   type HomeCategory,
 } from "../apiservices/HomeService";
+import ServiceDetailsDialog from "./components/ServiceDetailsDialog";
 import type { AuthUser } from "../formtypes/AuthTypes";
 import type {
   SubmitRequestData,
@@ -37,17 +38,24 @@ const getStoredUser = (): AuthUser | null => {
   }
 };
 
-function SelectedService() {
+function SelectedService({
+  categoryOverride,
+}: {
+  categoryOverride?: HomeCategory;
+}) {
   const { categoryId } = useParams();
   const [searchParams] = useSearchParams();
   const requestedService = searchParams.get("service");
-  const [category, setCategory] = useState<HomeCategory | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [category, setCategory] = useState<HomeCategory | null>(
+    categoryOverride ?? null,
+  );
+  const [loading, setLoading] = useState(!categoryOverride);
   const [error, setError] = useState<string | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
   const [messageSubmitted, setMessageSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionError, setSubmissionError] = useState<string | null>(null);
+  const [serviceDetails, setServiceDetails] = useState<string | null>(null);
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | null>(
     getStoredUser,
   );
@@ -66,6 +74,15 @@ function SelectedService() {
 
   useEffect(() => {
     let isCurrent = true;
+
+    if (categoryOverride) {
+      setCategory(categoryOverride);
+      setLoading(false);
+      setError(null);
+      return () => {
+        isCurrent = false;
+      };
+    }
 
     const loadCategory = async () => {
       setLoading(true);
@@ -108,7 +125,7 @@ function SelectedService() {
     return () => {
       isCurrent = false;
     };
-  }, [categoryId]);
+  }, [categoryId, categoryOverride]);
 
   if (loading) {
     return (
@@ -236,20 +253,25 @@ function SelectedService() {
                   `Explore the services available under ${category.name}.`}
             </p>
             {category.services?.length ? (
-              <ul className="mt-6 space-y-3">
+              <div className="mt-6 space-y-3">
                 {category.services.map((service, index) => (
-                  <li
+                  <div
                     key={`${service}-${index}`}
-                    className="flex items-start gap-3 text-sm leading-6 text-(--color-ink)"
+                    className="flex items-center justify-between gap-4 rounded-(--radius-small) border border-(--color-border) bg-(--color-background) px-4 py-3"
                   >
-                    <span
-                      className="mt-2 h-2 w-2 shrink-0 rounded-full bg-(--color-primary)"
-                      aria-hidden="true"
-                    />
-                    {service}
-                  </li>
+                    <span className="text-sm font-semibold leading-6 text-(--color-ink)">
+                      {service}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setServiceDetails(service)}
+                      className="shrink-0 rounded-full border border-(--color-primary)/30 px-3 py-1.5 text-xs font-extrabold text-(--color-primary) transition hover:bg-(--color-primary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)"
+                    >
+                      Details
+                    </button>
+                  </div>
                 ))}
-              </ul>
+              </div>
             ) : (
               <p className="mt-6 text-sm text-(--color-muted)">
                 No services have been added to this category yet.
@@ -297,7 +319,7 @@ function SelectedService() {
                 <Phone className="h-5 w-5" /> Call
               </a>
               <a
-                href={`mailto:support@diasporaconnect.co.ke?subject=${encodeURIComponent(`Service request: ${serviceTitle}`)}&body=${encodeURIComponent(requestMessage)}`}
+                href={`mailto:support@msaidizidiaspora.co.ke?subject=${encodeURIComponent(`Service request: ${serviceTitle}`)}&body=${encodeURIComponent(requestMessage)}`}
                 className="flex items-center justify-center gap-2 rounded-(--radius-small) bg-(--color-background) px-4 py-3 text-sm font-bold transition hover:text-(--color-primary)"
               >
                 <Mail className="h-5 w-5" /> Email
@@ -450,6 +472,14 @@ function SelectedService() {
           </div>
         </aside>
       </div>
+      {serviceDetails && (
+        <ServiceDetailsDialog
+          category={category.name}
+          service={serviceDetails}
+          requestHref={`${category.id === 0 ? "/investment" : `/services/${category.id}`}?service=${encodeURIComponent(serviceDetails)}`}
+          onClose={() => setServiceDetails(null)}
+        />
+      )}
     </main>
   );
 }

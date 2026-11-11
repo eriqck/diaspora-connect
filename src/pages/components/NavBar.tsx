@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { ImageIcon, LogOut } from "lucide-react";
+import { LogOut, Menu, X } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import msaidiziLogo from "../../assets/msaidizi-diaspora-logo.png";
 import { logoutUser } from "../../apiservices/AuthService";
 import {
   fetchCategories,
@@ -11,6 +12,14 @@ import type { AuthUser } from "../../formtypes/AuthTypes";
 
 type IconProps = { className?: string };
 type ServiceSearchResult = { title: string; categoryId: number; service?: string };
+
+const featuredServiceLinks = [
+  { label: "Building & Consultancy", to: "/building-consultancy" },
+  { label: "Land & Property", to: "/land-property-purchase" },
+  { label: "Family Errands", to: "/family-errands-concierge" },
+  { label: "Government Services", to: "/government-services" },
+  { label: "Investment", to: "/investment" },
+];
 
 const SearchIcon = ({ className }: IconProps) => (
   <svg
@@ -70,38 +79,6 @@ const ArrowIcon = ({ className }: IconProps) => (
   </svg>
 );
 
-const MenuImage = ({
-  src,
-  alt,
-  className,
-}: {
-  src: string | null;
-  alt: string;
-  className: string;
-}) => {
-  const [failed, setFailed] = useState(false);
-
-  if (!src || failed) {
-    return (
-      <span
-        className={`${className} grid place-items-center bg-(--color-background) text-(--color-muted)`}
-        aria-hidden="true"
-      >
-        <ImageIcon className="h-6 w-6" />
-      </span>
-    );
-  }
-
-  return (
-    <img
-      src={src}
-      alt={alt}
-      className={`${className} object-cover`}
-      onError={() => setFailed(true)}
-    />
-  );
-};
-
 const getStoredUser = (): AuthUser | null => {
   const token = localStorage.getItem("authToken");
   const storedUser = localStorage.getItem("authUser");
@@ -121,7 +98,6 @@ function NavBar() {
   const categoryRail = useRef<HTMLDivElement>(null);
   const accountDropdown = useRef<HTMLDetailsElement>(null);
   const searchForm = useRef<HTMLFormElement>(null);
-  const submenuCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const [authenticatedUser, setAuthenticatedUser] = useState<AuthUser | null>(
@@ -134,10 +110,7 @@ function NavBar() {
   const [categoriesLoading, setCategoriesLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
-  const [openCategory, setOpenCategory] = useState<{
-    id: number;
-    top: number;
-  } | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     let isCurrent = true;
@@ -186,13 +159,6 @@ function NavBar() {
       }
 
       if (
-        !(event.target instanceof Element) ||
-        !event.target.closest("[data-service-menu]")
-      ) {
-        setOpenCategory(null);
-      }
-
-      if (
         searchForm.current &&
         !searchForm.current.contains(event.target as Node)
       ) {
@@ -202,8 +168,8 @@ function NavBar() {
 
     const closeOnEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
-        setOpenCategory(null);
         setSearchOpen(false);
+        setMobileMenuOpen(false);
       }
     };
 
@@ -213,7 +179,6 @@ function NavBar() {
     return () => {
       document.removeEventListener("pointerdown", clickOut);
       document.removeEventListener("keydown", closeOnEscape);
-      if (submenuCloseTimer.current) clearTimeout(submenuCloseTimer.current);
     };
   }, []);
 
@@ -243,42 +208,12 @@ function NavBar() {
   }, [categories]);
 
   const scrollCategories = (direction: "left" | "right") => {
-    setOpenCategory(null);
     categoryRail.current?.scrollBy({
       left: direction === "left" ? -320 : 320,
       behavior: "smooth",
     });
   };
 
-  const openCategoryMenu = (
-    id: number,
-    button: HTMLButtonElement,
-  ) => {
-    if (submenuCloseTimer.current) clearTimeout(submenuCloseTimer.current);
-
-    const buttonBounds = button.getBoundingClientRect();
-
-    setOpenCategory({
-      id,
-      top: buttonBounds.bottom + 8,
-    });
-  };
-
-  const scheduleSubmenuClose = () => {
-    if (submenuCloseTimer.current) clearTimeout(submenuCloseTimer.current);
-
-    submenuCloseTimer.current = setTimeout(() => {
-      setOpenCategory(null);
-    }, 150);
-  };
-
-  const keepSubmenuOpen = () => {
-    if (submenuCloseTimer.current) clearTimeout(submenuCloseTimer.current);
-  };
-
-  const activeCategory = categories.find(
-    ({ id }) => id === openCategory?.id,
-  );
   const normalizedSearch = searchQuery.trim().toLowerCase();
   const searchResults: ServiceSearchResult[] = normalizedSearch
     ? categories.flatMap((category) => [
@@ -323,17 +258,17 @@ function NavBar() {
   };
 
   return (
-    <header className="relative z-30 border-b border-(--color-border) bg-(--color-surface) text-(--color-ink) shadow-[0_6px_20px_rgba(30,58,138,0.07)]">
+    <header className="sticky top-0 z-40 border-b border-(--color-border)/80 bg-[rgba(242,243,250,0.9)] text-(--color-ink) shadow-[0_8px_28px_rgba(32,33,88,0.08)] backdrop-blur-xl">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:flex-nowrap lg:px-8">
         <Link
           to="/"
           className="flex shrink-0 items-center gap-0.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-primary)"
-          aria-label="Diaspora Help home"
+          aria-label="Msaidizi Diaspora home"
         >
           <img
-            src="/images/md.png"
+            src={msaidiziLogo}
             alt=""
-            className="h-18 w-18 shrink-0 rounded-md object-cover"
+            className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
           />
           <span className="text-xl font-extrabold tracking-tight sm:text-2xl">
             Msaidizi <span className="text-(--color-primary)">Diaspora</span>
@@ -403,9 +338,24 @@ function NavBar() {
           )}
         </form>
 
+        <button
+          type="button"
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-service-menu"
+          aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+          onClick={() => setMobileMenuOpen((isOpen) => !isOpen)}
+          className="ml-auto grid h-10 w-10 shrink-0 place-items-center rounded-lg text-(--color-primary) transition hover:bg-(--color-background) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) lg:hidden"
+        >
+          {mobileMenuOpen ? (
+            <X className="h-6 w-6" aria-hidden="true" />
+          ) : (
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          )}
+        </button>
+
         <details
           ref={accountDropdown}
-          className="group relative z-50 ml-auto shrink-0"
+          className="group relative z-50 shrink-0 lg:ml-auto"
         >
           <summary className="flex cursor-pointer list-none items-center gap-2 rounded-lg px-2 py-2 font-semibold transition hover:bg-(--color-background) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) [&::-webkit-details-marker]:hidden">
             {authenticatedUser ? (
@@ -470,16 +420,68 @@ function NavBar() {
         </details>
       </div>
 
+      {mobileMenuOpen && (
+        <nav
+          id="mobile-service-menu"
+          aria-label="Mobile services and information"
+          className="border-t border-(--color-border) bg-(--color-surface) px-4 py-3 shadow-lg lg:hidden sm:px-6"
+        >
+          <div className="mx-auto grid max-w-7xl gap-1">
+            {featuredServiceLinks.map(({ label, to }) => (
+              <Link
+                key={to}
+                to={to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-4 py-3 text-sm font-semibold text-(--color-ink) transition hover:bg-(--color-background) hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
+              >
+                {label}
+              </Link>
+            ))}
+            {categoriesLoading && categories.length === 0 && (
+              <p className="px-4 py-3 text-sm text-(--color-muted)">
+                Loading services...
+              </p>
+            )}
+            {categories.map(({ id, name }) => (
+              <Link
+                key={id}
+                to={`/services/${id}`}
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-lg px-4 py-3 text-sm font-semibold text-(--color-ink) transition hover:bg-(--color-background) hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
+              >
+                {name}
+              </Link>
+            ))}
+            <Link
+              to="/how-it-works"
+              onClick={() => setMobileMenuOpen(false)}
+              className="rounded-lg px-4 py-3 text-sm font-semibold text-(--color-ink) transition hover:bg-(--color-background) hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-(--color-primary)"
+            >
+              How It Works
+            </Link>
+          </div>
+        </nav>
+      )}
+
       <nav
-        className="relative z-0 border-t border-(--color-border)"
-        aria-label="Service categories"
+        className="relative z-0 hidden border-t border-white/15 bg-(--color-accent) text-white lg:block"
+        aria-label="Services and information"
       >
         <div className="relative mx-auto flex max-w-7xl items-center px-4 sm:px-6 lg:px-8">
+          {featuredServiceLinks.map(({ label, to }) => (
+            <Link
+              key={to}
+              to={to}
+              className="mr-1 shrink-0 whitespace-nowrap rounded-lg px-3 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+            >
+              {label}
+            </Link>
+          ))}
           {canScrollLeft && (
             <button
               type="button"
               onClick={() => scrollCategories("left")}
-              className="absolute left-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-(--color-border) bg-(--color-surface) text-(--color-primary) shadow-md transition hover:bg-(--color-primary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) sm:left-4"
+              className="absolute left-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/35 bg-white/10 text-white shadow-md transition hover:bg-white hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:left-4"
               aria-label="Show previous service categories"
             >
               <ArrowIcon className="h-4 w-4 rotate-180" />
@@ -488,50 +490,30 @@ function NavBar() {
 
           <div
             ref={categoryRail}
-            onScroll={() => {
-              updateScrollButtons();
-              setOpenCategory(null);
-            }}
+            onScroll={updateScrollButtons}
             className="scrollbar-none flex w-full snap-x gap-1 overflow-x-auto py-2"
           >
             {categoriesLoading && categories.length === 0 && (
-              <span className="px-4 py-2.5 text-sm font-semibold text-(--color-muted)">
+              <span className="px-4 py-2.5 text-sm font-semibold text-white/75">
                 Loading services...
               </span>
             )}
             {!categoriesLoading && categories.length === 0 && (
               <Link
                 to="/services"
-                className="rounded-lg px-4 py-2.5 text-sm font-semibold text-(--color-primary) hover:bg-(--color-background)"
+                className="rounded-lg px-4 py-2.5 text-sm font-semibold text-white hover:bg-white/10"
               >
                 Browse all services
               </Link>
             )}
-            {categories.map(({ id, name, image }) => (
-              <button
+            {categories.map(({ id, name }) => (
+              <Link
                 key={id}
-                type="button"
-                data-service-menu
-                onMouseEnter={(event) => openCategoryMenu(id, event.currentTarget)}
-                onMouseLeave={scheduleSubmenuClose}
-                onFocus={(event) => openCategoryMenu(id, event.currentTarget)}
-                onClick={(event) => openCategoryMenu(id, event.currentTarget)}
-                aria-expanded={openCategory?.id === id}
-                aria-controls="service-submenu"
-                className="flex shrink-0 snap-start items-center gap-2 whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold text-(--color-ink) transition hover:bg-(--color-background) hover:text-(--color-primary) focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-(--color-primary)"
+                to={`/services/${id}`}
+                className="flex shrink-0 snap-start items-center whitespace-nowrap rounded-lg px-4 py-2.5 text-sm font-semibold text-white/90 transition hover:bg-white/10 hover:text-white focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-white"
               >
-                <MenuImage
-                  src={image}
-                  alt=""
-                  className="h-7 w-7 shrink-0 rounded-md"
-                />
                 {name}
-                <ChevronIcon
-                  className={`h-3.5 w-3.5 transition-transform ${
-                    openCategory?.id === id ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
+              </Link>
             ))}
           </div>
 
@@ -539,7 +521,7 @@ function NavBar() {
             <button
               type="button"
               onClick={() => scrollCategories("right")}
-              className="absolute right-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-(--color-border) bg-(--color-surface) text-(--color-primary) shadow-md transition hover:bg-(--color-primary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary) sm:right-4"
+              className="absolute right-2 z-10 grid h-9 w-9 place-items-center rounded-full border border-white/35 bg-white/10 text-white shadow-md transition hover:bg-white hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white sm:right-4"
               aria-label="Show more service categories"
             >
               <ArrowIcon className="h-4 w-4" />
@@ -547,79 +529,6 @@ function NavBar() {
           )}
         </div>
 
-        {openCategory && activeCategory && (
-          <div
-            id="service-submenu"
-            data-service-menu
-            onMouseEnter={keepSubmenuOpen}
-            onMouseLeave={scheduleSubmenuClose}
-            className="fixed inset-x-0 z-50 overflow-y-auto border-y border-(--color-border) bg-(--color-surface) shadow-[0_24px_50px_rgba(15,23,42,0.18)]"
-            style={{
-              top: openCategory.top,
-              maxHeight: `calc(100vh - ${openCategory.top + 8}px)`,
-            }}
-          >
-            <div className="mx-auto grid max-w-7xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[minmax(240px,0.8fr)_2.2fr] lg:px-8 lg:py-8">
-              <section className="overflow-hidden rounded-(--radius-medium) bg-(--color-background)">
-                <MenuImage
-                  src={activeCategory.image}
-                  alt={activeCategory.name}
-                  className="aspect-16/8 w-full lg:aspect-4/3"
-                />
-                <div className="p-5">
-                  <h2 className="mt-2 text-xl font-black text-(--color-ink)">
-                    {activeCategory.name}
-                  </h2>
-                  <Link
-                    to={`/services/${activeCategory.id}`}
-                    onClick={() => setOpenCategory(null)}
-                    className="mt-4 inline-flex items-center gap-2 text-sm font-extrabold text-(--color-primary) hover:underline"
-                  >
-                    Request this service
-                    <ArrowIcon className="h-4 w-4" />
-                  </Link>
-                </div>
-              </section>
-
-              <section aria-labelledby="category-services-heading">
-                <div className="mb-4 flex items-end justify-between gap-4">
-                  <div>
-                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-(--color-muted)">
-                      Explore
-                    </p>
-                    <h3 id="category-services-heading" className="mt-1 text-lg font-black">
-                      {activeCategory.name} services
-                    </h3>
-                  </div>
-                  <span className="text-sm text-(--color-muted)">
-                    {activeCategory.services?.length ?? 0} options
-                  </span>
-                </div>
-
-                {activeCategory.services?.length ? (
-                  <ul className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                    {activeCategory.services.map((service, index) => (
-                      <li
-                        key={`${service}-${index}`}
-                        className="flex min-w-0 items-start gap-3 rounded-(--radius-medium) border border-(--color-border) p-4 text-sm font-semibold text-(--color-ink)"
-                      >
-                        <span
-                          className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-(--color-primary)"
-                          aria-hidden="true"
-                        />
-                        {service}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="rounded-(--radius-medium) border border-dashed border-(--color-border) px-5 py-10 text-center text-sm text-(--color-muted)">
-                    Services for this category are coming soon.
-                  </div>
-                )}
-              </section>
-            </div>
-          </div>
-        )}
       </nav>
     </header>
   );

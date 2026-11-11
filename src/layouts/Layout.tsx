@@ -3,6 +3,7 @@ import { Mail, MessageCircle, Phone, X } from "lucide-react";
 import { Outlet } from "react-router-dom";
 import Footer from "../pages/components/Footer";
 import NavBar from "../pages/components/NavBar";
+import RequestServiceNow from "../pages/components/RequestServiceNow";
 import TopBar from "../pages/components/TopBar";
 
 function Layout() {
@@ -35,6 +36,10 @@ function Layout() {
       <NavBar />
       <Outlet />
       <Footer />
+
+      <div className="fixed bottom-24 right-4 z-50 sm:bottom-28 sm:right-7">
+        <RequestServiceNow />
+      </div>
 
       <div
         ref={contactMenu}
@@ -75,7 +80,7 @@ function Layout() {
                 Call
               </a>
               <a
-                href="mailto:support@diasporaconnect.co.ke?subject=Enquiry%20for%20Alfred"
+                href="mailto:support@msaidizidiaspora.co.ke?subject=Enquiry%20for%20Alfred"
                 className="flex items-center gap-3 rounded-(--radius-small) bg-(--color-background) px-3 py-3 font-bold text-(--color-ink) transition hover:text-(--color-primary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--color-primary)"
               >
                 <Mail className="h-5 w-5" />

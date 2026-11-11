@@ -247,7 +247,7 @@ export default function Auth() {
             </h2>
             <p className="mt-2 text-sm leading-6 text-(--color-muted)">
               {isSignUp
-                ? "Join Diaspora Help and start tracking your requests."
+                ? "Join Msaidizi Diaspora and start tracking your requests."
                 : "Sign in to view and manage your requests."}
             </p>
 
@@ -543,7 +543,7 @@ export default function Auth() {
             </form>          
 
             <p className="mt-6 text-center text-sm text-(--color-muted)">
-              {isSignUp ? "Already have an account?" : "New to Diaspora Help?"}{" "}
+              {isSignUp ? "Already have an account?" : "New to Msaidizi Diaspora?"}{" "}
               <Link
                 to={isSignUp ? "/login" : "/register"}
                 className="font-extrabold text-(--color-primary) hover:underline"

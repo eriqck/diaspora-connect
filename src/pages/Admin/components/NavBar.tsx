@@ -89,7 +89,7 @@ function NavBar() {
         <Link
           to="/admin/dashboard"
           className="flex w-fit items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-(--color-primary)"
-          aria-label="Diaspora Help admin dashboard"
+          aria-label="Msaidizi Diaspora admin dashboard"
         >
           
           <span>

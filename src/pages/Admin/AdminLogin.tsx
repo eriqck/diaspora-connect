@@ -120,7 +120,7 @@ export default function AdminLogin() {
         </div>
 
         <p className="relative text-xs font-semibold text-white/45">
-          Restricted to authorised Diaspora Help administrators.
+          Restricted to authorised Msaidizi Diaspora administrators.
         </p>
       </section>
 

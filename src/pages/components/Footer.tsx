@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone } from "lucide-react";
+import msaidiziLogo from "../../assets/msaidizi-diaspora-logo.png";
 
 type SocialIconProps = {
   className?: string;
@@ -55,21 +56,29 @@ function Footer() {
         <div className="max-w-md">
           <a
             href="/"
-            className="inline-block rounded-lg text-2xl font-extrabold tracking-tight focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-            aria-label="Diaspora Help home"
+            className="inline-flex items-center gap-3 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+            aria-label="Msaidizi Diaspora home"
           >
-            Diaspora Help
-            <span
-              aria-hidden="true"
-              className="mt-2 flex h-1 w-16 overflow-hidden rounded-full"
-            >
-              <span className="w-1/2 bg-(--color-secondary)" />
-              <span className="w-1/2 bg-(--color-primary)" />
+            <img
+              src={msaidiziLogo}
+              alt=""
+              className="h-16 w-16 shrink-0 object-contain"
+            />
+            <span className="text-2xl font-extrabold tracking-tight">
+              Msaidizi Diaspora
             </span>
           </a>
           <p className="mt-4 text-sm leading-6 text-white/75">
-            Trusted, practical support for the diaspora handling important matters across Kenya.
+            Trusted, practical support for Kenyans abroad handling important matters across Kenya.
           </p>
+          <a
+            href="https://developererik.me"
+            target="_blank"
+            rel="noreferrer"
+            className="mt-3 inline-flex rounded-lg text-sm font-bold text-white/85 underline decoration-(--color-secondary) underline-offset-4 transition hover:text-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
+          >
+            Designed by Developer Erik
+          </a>
         </div>
 
         <div className="md:justify-self-end">
@@ -88,11 +97,11 @@ function Footer() {
               </span>
               +254 720 554 657
             </a>
-            <a className={contactRowClass} href="mailto:support@diasporahelp.co.ke">
+            <a className={contactRowClass} href="mailto:support@msaidizidiaspora.co.ke">
               <span className={contactChipClass}>
                 <Mail className="h-4 w-4" aria-hidden="true" />
               </span>
-              support@diasporahelp.co.ke
+              support@msaidizidiaspora.co.ke
             </a>
             <p className="flex items-center gap-3 text-white/85">
               <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-(--color-primary) text-white">
@@ -121,13 +130,15 @@ function Footer() {
 
       <div className="border-t border-white/15">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-4 py-5 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 lg:px-8">
-          <p>&copy; {currentYear} Diaspora Help. All rights reserved.</p>
-          <p>
-            Developed by{" "}
-            <span className="font-bold text-white underline decoration-(--color-secondary) decoration-2 underline-offset-4">
-              Munax Digital Solutions
-            </span>
-          </p>
+          <p>&copy; {currentYear} Msaidizi Diaspora. All rights reserved.</p>
+          <div className="text-left sm:text-right">
+            <p>
+              Developed by{" "}
+              <span className="font-bold text-white underline decoration-(--color-secondary) decoration-2 underline-offset-4">
+                Munax Digital Solutions
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </footer>

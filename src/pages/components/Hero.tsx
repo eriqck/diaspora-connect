@@ -2,10 +2,8 @@ import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowRight,
-  Check,
   ChevronLeft,
   ChevronRight,
-  ImageIcon,
   Pause,
   Play,
 } from "lucide-react";
@@ -13,6 +11,8 @@ import {
   fetchCategories,
   type HomeCategory,
 } from "../../apiservices/HomeService";
+import welcomeHeroImage from "../../assets/welcome-hero.png";
+import ServiceDetailsDialog from "./ServiceDetailsDialog";
 
 const AUTOPLAY_MS = 7000;
 
@@ -24,8 +24,12 @@ function Hero() {
   const [paused, setPaused] = useState(false);
   const [userPaused, setUserPaused] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
+  const [serviceDetails, setServiceDetails] = useState<{
+    category: HomeCategory;
+    service: string;
+  } | null>(null);
 
-  const total = categories.length;
+  const total = categories.length + 1;
 
   const goTo = useCallback(
     (i: number) => {
@@ -87,27 +91,18 @@ function Hero() {
 
   return (
     <section
-      className="bg-(--color-background) px-4 py-5 sm:px-6 sm:py-7 lg:px-8"
+      className="bg-(--color-background)"
       aria-labelledby="hero-heading"
     >
       <h1 id="hero-heading" className="sr-only">
-        Services in Kenya, handled for you
+        Welcome to Msaidizi Diaspora
       </h1>
 
-      {categoriesLoading || categoriesError || categories.length === 0 ? (
-        <div className="mx-auto max-w-360 rounded-[1.4rem] bg-[linear-gradient(115deg,var(--color-accent),var(--color-primary-dark)_75%)] px-7 py-12 text-white shadow-(--shadow-soft) sm:px-10 lg:px-14">
-          <p role={categoriesError ? "alert" : "status"}>
-            {categoriesLoading
-              ? "Loading service categories..."
-              : categoriesError || "No service categories are available."}
-          </p>
-        </div>
-      ) : (
       <div
         role="region"
         aria-roledescription="carousel"
-        aria-label="Service categories"
-        className="relative mx-auto max-w-360 overflow-hidden rounded-[1.4rem] bg-[linear-gradient(115deg,var(--color-accent),var(--color-primary-dark)_75%)] text-white shadow-(--shadow-soft)"
+        aria-label="Msaidizi Diaspora introduction and services"
+        className="relative overflow-hidden bg-(--color-accent) text-white"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
         onFocus={() => setPaused(true)}
@@ -118,94 +113,151 @@ function Hero() {
         }}
       >
 
-        {/* Decorative circles */}
-        <div className="pointer-events-none absolute inset-0 opacity-20" aria-hidden="true">
-          <div className="absolute -left-20 -top-28 h-80 w-80 rounded-full border-60 border-white/20" />
-          <div className="absolute right-[18%] -top-36 h-72 w-72 rounded-full border-50 border-white/15" />
-        </div>
-
         {/* Slide track */}
         <div
           className="flex transition-transform duration-700 ease-out motion-reduce:transition-none"
           style={{ transform: `translateX(-${index * 100}%)` }}
           aria-live={autoplay ? "off" : "polite"}
         >
+          <div
+            role="group"
+            aria-roledescription="slide"
+            aria-label={`1 of ${total}: Welcome to Msaidizi Diaspora`}
+            aria-hidden={index !== 0}
+            className="relative flex min-h-[min(760px,85svh)] w-full shrink-0 items-center overflow-hidden px-7 pb-28 pt-16 sm:px-10 lg:px-14 lg:pb-32"
+          >
+            <img
+              src={welcomeHeroImage}
+              alt=""
+              aria-hidden="true"
+              fetchPriority="high"
+              className="absolute inset-0 h-full w-full object-cover"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-[linear-gradient(90deg,rgba(25,26,75,0.88)_0%,rgba(31,32,89,0.7)_52%,rgba(31,32,89,0.35)_100%)]"
+            />
+            <div className="relative z-10 w-full max-w-4xl">
+              <h2 className="max-w-3xl text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl lg:text-7xl">
+                Welcome to Msaidizi Diaspora
+              </h2>
+              <h3 className="mt-6 max-w-3xl text-xl font-bold leading-tight tracking-tight sm:text-2xl lg:text-3xl">
+                Your Trusted On-Ground Partner Back Home
+              </h3>
+              <p className="mt-4 max-w-3xl text-base leading-7 text-white/85 sm:text-lg sm:leading-8">
+                We deliver total peace of mind so you can focus on your life
+                abroad while your investments, projects, and affairs are
+                managed seamlessly at home. True to our name, we are dedicated
+                to handling your every need with absolute integrity,
+                uncompromising transparency, and on-time execution. Count on us
+                for dependable, seamless service and results you can count on
+                every step of the way.
+              </p>
+              {categoriesLoading && (
+                <p className="mt-4 text-sm text-white/70" role="status">
+                  Loading service categories...
+                </p>
+              )}
+              {categoriesError && (
+                <p className="mt-4 text-sm text-white" role="alert">
+                  {categoriesError}
+                </p>
+              )}
+              {!categoriesLoading && !categoriesError && categories.length === 0 && (
+                <p className="mt-4 text-sm text-white/70">
+                  No service categories are available.
+                </p>
+              )}
+              <div className="mt-8 flex flex-wrap items-center gap-x-10 gap-y-4">
+                <Link
+                  to="/services"
+                  tabIndex={index === 0 ? 0 : -1}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-(--color-secondary) px-7 py-4 font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                >
+                  Browse our services
+                  <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                </Link>
+                <Link
+                  to="/how-it-works"
+                  tabIndex={index === 0 ? 0 : -1}
+                  className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-7 py-4 font-bold text-black shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                  style={{ color: "#000000" }}
+                >
+                  How It Works
+                </Link>
+              </div>
+            </div>
+          </div>
           {categories.map((category, i) => {
-            const active = i === index;
+            const active = i + 1 === index;
             return (
               <div
                 key={category.id}
                 role="group"
                 aria-roledescription="slide"
-                aria-label={`${i + 1} of ${total}: ${category.name}`}
+                aria-label={`${i + 2} of ${total}: ${category.name}`}
                 aria-hidden={!active}
-                className="relative grid w-full shrink-0 items-center gap-8 px-7 pb-24 pt-12 sm:px-10 lg:min-h-130 lg:grid-cols-[1.05fr_0.95fr] lg:gap-14 lg:px-14 lg:pb-20 lg:pt-14"
+                className="relative flex min-h-[min(760px,85svh)] w-full shrink-0 items-center px-7 pb-28 pt-16 sm:px-10 lg:px-14 lg:pb-32"
               >
-                {/* Text */}
-                <div className="max-w-xl">
-                  <span className="inline-block rounded-(--radius-pill) bg-(--color-secondary) px-4 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-white">
-                    Our services
-                  </span>
-
-                  <h2 className="mt-5 text-4xl font-black leading-[1.05] tracking-tight sm:text-5xl">
-                    {category.name}
+                {category.image && (
+                  <img
+                    src={category.image}
+                    alt=""
+                    aria-hidden="true"
+                    loading={i === 0 ? "eager" : "lazy"}
+                    className="absolute inset-0 h-full w-full object-cover"
+                  />
+                )}
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-[linear-gradient(90deg,rgba(25,26,75,0.94)_0%,rgba(31,32,89,0.82)_52%,rgba(31,32,89,0.36)_100%)]"
+                />
+                <div className="relative z-10 w-full max-w-4xl">
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-white/75 sm:text-sm">
+                    Trusted support for your life back home
+                  </p>
+                  <h2 className="mt-5 max-w-3xl text-4xl font-medium leading-[1.08] tracking-tight sm:text-5xl lg:text-7xl">
+                    {category.name}, handled with care.
                   </h2>
 
-                  <ul className="mt-6 space-y-3">
+                  <div className="mt-7 flex flex-wrap gap-3">
                     {(category.services ?? []).map((service) => (
-                      <li key={service} className="flex items-start gap-3 text-base text-white/90 sm:text-lg">
-                        <span className="mt-1 grid h-5 w-5 shrink-0 place-items-center rounded-full bg-white text-(--color-primary)">
-                          <Check className="h-3.5 w-3.5 stroke-3" aria-hidden="true" />
+                      <div
+                        key={service}
+                        className="inline-flex items-center gap-3 rounded-full border border-white/35 bg-white/5 py-1.5 pl-3 pr-1.5"
+                      >
+                        <span className="text-sm font-semibold text-white/90 sm:text-base">
+                          {service}
                         </span>
-                        <span>{service}</span>
-                      </li>
+                        <button
+                          type="button"
+                          tabIndex={active ? 0 : -1}
+                          onClick={() => setServiceDetails({ category, service })}
+                          className="rounded-full bg-white px-3 py-1 text-xs font-extrabold text-(--color-primary-dark) transition hover:bg-(--color-secondary) hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                        >
+                          Details
+                        </button>
+                      </div>
                     ))}
-                  </ul>
+                  </div>
 
-                  <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                  <div className="mt-9 flex flex-wrap items-center gap-x-10 gap-y-4">
                     <Link
                       to={`/services/${category.id}`}
                       tabIndex={active ? 0 : -1}
-                      className="inline-flex items-center gap-2 rounded-(--radius-small) bg-(--color-secondary) px-6 py-3.5 font-extrabold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-white hover:text-(--color-secondary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-(--color-secondary) px-7 py-4 font-bold text-white shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5 hover:bg-white hover:text-(--color-secondary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
                     >
-                      Request this service <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                      Request this service
+                      <ArrowRight className="h-4 w-4" aria-hidden="true" />
                     </Link>
-                    <a
-                      href="#how-it-works"
+                    <Link
+                      to="/how-it-works"
                       tabIndex={active ? 0 : -1}
-                      className="text-sm font-bold text-white/80 underline decoration-white/30 underline-offset-4 transition hover:text-white"
+                      className="inline-flex items-center gap-2 rounded-full border-2 border-white bg-white px-7 py-4 font-bold text-black shadow-[0_8px_24px_rgba(0,0,0,0.3)] transition hover:-translate-y-0.5 hover:bg-white/90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                      style={{ color: "#000000" }}
                     >
-                      See how Diaspora Help works
-                    </a>
-                  </div>
-                </div>
-
-                {/* Image */}
-                <div className="order-first lg:order-last">
-                  <div className="relative mx-auto w-full max-w-md lg:max-w-none">
-                    <div
-                      aria-hidden="true"
-                      className="absolute -inset-2 rotate-2 rounded-4xl bg-(--color-secondary)/80"
-                    />
-                    <div
-                      aria-hidden="true"
-                      className="absolute -inset-2 -rotate-2 rounded-4xl bg-(--color-primary)/80"
-                    />
-                    {category.image ? (
-                      <img
-                        src={category.image}
-                        alt={`${category.name} services`}
-                        loading={i === 0 ? "eager" : "lazy"}
-                        className="relative h-56 w-full rounded-3xl border-4 border-white object-cover shadow-2xl sm:h-72 lg:h-96"
-                      />
-                    ) : (
-                      <div
-                        className="relative grid h-56 w-full place-items-center rounded-3xl border-4 border-white bg-white/10 text-white shadow-2xl sm:h-72 lg:h-96"
-                        aria-hidden="true"
-                      >
-                        <ImageIcon className="h-12 w-12" />
-                      </div>
-                    )}
+                      How It Works
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -215,17 +267,27 @@ function Hero() {
 
         {/* Controls */}
         <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between gap-4 px-7 pb-6 sm:px-10 lg:px-14">
-          <div className="flex items-center gap-2" role="tablist" aria-label="Choose a category">
+          <div className="flex items-center gap-2" role="tablist" aria-label="Choose a hero slide">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={index === 0}
+              aria-label="Show Welcome to Msaidizi Diaspora"
+              onClick={() => goTo(0)}
+              className={`h-2.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
+                index === 0 ? "w-8 bg-(--color-secondary)" : "w-2.5 bg-white/50 hover:bg-white"
+              }`}
+            />
             {categories.map((category, i) => (
               <button
                 key={category.id}
                 type="button"
                 role="tab"
-                aria-selected={i === index}
+                aria-selected={i + 1 === index}
                 aria-label={`Show ${category.name}`}
-                onClick={() => goTo(i)}
+                onClick={() => goTo(i + 1)}
                 className={`h-2.5 rounded-full transition-all focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white ${
-                  i === index ? "w-8 bg-(--color-secondary)" : "w-2.5 bg-white/50 hover:bg-white"
+                  i + 1 === index ? "w-8 bg-(--color-secondary)" : "w-2.5 bg-white/50 hover:bg-white"
                 }`}
               />
             ))}
@@ -249,7 +311,7 @@ function Hero() {
             <button
               type="button"
               onClick={prev}
-              aria-label="Previous category"
+              aria-label="Previous slide"
               className="grid h-10 w-10 place-items-center rounded-full border border-white/30 text-white transition hover:border-(--color-secondary) hover:bg-(--color-secondary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -257,7 +319,7 @@ function Hero() {
             <button
               type="button"
               onClick={next}
-              aria-label="Next category"
+              aria-label="Next slide"
               className="grid h-10 w-10 place-items-center rounded-full border border-white/30 text-white transition hover:border-(--color-secondary) hover:bg-(--color-secondary) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -265,6 +327,13 @@ function Hero() {
           </div>
         </div>
       </div>
+      {serviceDetails && (
+        <ServiceDetailsDialog
+          category={serviceDetails.category.name}
+          service={serviceDetails.service}
+          requestHref={`/services/${serviceDetails.category.id}?service=${encodeURIComponent(serviceDetails.service)}`}
+          onClose={() => setServiceDetails(null)}
+        />
       )}
     </section>
   );

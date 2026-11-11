@@ -2,8 +2,15 @@
 
 html {
   color-scheme: light;
-  font-family: "Montserrat", sans-serif;
+  font-family: "DM Sans", sans-serif;
   background: var(--color-background, #f7f5ef);
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: "Playfair Display", Georgia, serif;
 }
 
 body {
@@ -19,6 +26,18 @@ a {
 button,
 a {
   -webkit-tap-highlight-color: transparent;
+}
+
+:is(button, a)[class~="bg-(--color-primary)"],
+:is(button, a)[class~="bg-(--color-primary-dark)"],
+:is(button, a)[class~="bg-(--color-accent)"] {
+  color: #fff;
+}
+
+:is(button, a)[class~="bg-(--color-primary)"] :where(span, svg),
+:is(button, a)[class~="bg-(--color-primary-dark)"] :where(span, svg),
+:is(button, a)[class~="bg-(--color-accent)"] :where(span, svg) {
+  color: #fff;
 }
 
 .scrollbar-none {
