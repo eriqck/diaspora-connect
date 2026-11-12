@@ -47,6 +47,10 @@ function App() {
                   "Physical survey & beacon verification with registered surveyor",
                   "Seller identity & spouse consent verification",
                   "Comprehensive Legal Risk Report with Advocate Stamp",
+                  "Processing of title deeds",
+                  "Replacement of lost title deeds",
+                  "Insertion or removal of caveats, cautions, and related restrictions",
+                  "Payment of land rates and ground rents, plus rates clearance certificates",
                 ]}
                 whatsappMessage="Hello, I would like to ask about land and property purchase support."
                 image={landPropertyPurchaseImage}
@@ -87,6 +91,8 @@ function App() {
                   "Fast-tracked Kenyan Passport & ID renewals liaison",
                   "Ministry of Foreign Affairs document attestation & apostille",
                   "Safe courier dispatch of physical certificates to your overseas address",
+                  "Birth certificates",
+                  "Death certificates",
                 ]}
                 whatsappMessage="Hello, I would like to ask about government services support."
                 image={governmentServicesImage}
