@@ -61,12 +61,9 @@ function Footer() {
           >
             <img
               src={msaidiziLogo}
-              alt=""
-              className="h-16 w-16 shrink-0 object-contain"
+              alt="Msaidizi Diaspora"
+              className="h-16 w-48 shrink-0 rounded-lg bg-white p-2 object-contain sm:h-20 sm:w-56"
             />
-            <span className="text-2xl font-extrabold tracking-tight">
-              Msaidizi Diaspora
-            </span>
           </a>
           <p className="mt-4 text-sm leading-6 text-white/75">
             Trusted, practical support for Kenyans abroad handling important matters across Kenya.

@@ -267,12 +267,9 @@ function NavBar() {
         >
           <img
             src={msaidiziLogo}
-            alt=""
-            className="h-14 w-14 shrink-0 object-contain sm:h-16 sm:w-16"
+            alt="Msaidizi Diaspora"
+            className="h-14 w-40 shrink-0 object-contain sm:h-16 sm:w-48"
           />
-          <span className="text-xl font-extrabold tracking-tight sm:text-2xl">
-            Msaidizi <span className="text-(--color-primary)">Diaspora</span>
-          </span>
         </Link>
 
         <form
